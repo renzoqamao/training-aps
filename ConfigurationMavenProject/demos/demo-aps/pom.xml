@@ -1,0 +1,105 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>org.alfresco</groupId>
+  <artifactId>demo-aps</artifactId>
+  <packaging>jar</packaging>
+  <version>1.0-SNAPSHOT</version>
+  <name>demo-aps</name>
+  <url>http://maven.apache.org</url>
+
+  <properties>
+		<maven.compiler.source>17</maven.compiler.source>
+		<maven.compiler.target>17</maven.compiler.target>
+		<suite.version>24.2.0</suite.version>
+		<spring-boot.version>3.2.3</spring-boot.version>
+	</properties>
+
+  <dependencies>
+    <dependency>
+			<groupId>com.activiti</groupId>
+			<artifactId>activiti-app-logic</artifactId>
+			<version>${suite.version}</version>
+			<scope>provided</scope>
+			<exclusions>
+				<exclusion>
+					<groupId>org.apache.commons</groupId>
+					<artifactId>commons-email2-core</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>org.apache.commons</groupId>
+					<artifactId>commons-email2-jakarta</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+		<dependency>
+			<groupId>com.activiti</groupId>
+			<artifactId>activiti-app-rest</artifactId>
+			<version>${suite.version}</version>
+			<scope>provided</scope>
+			<exclusions>
+				<exclusion>
+					<groupId>org.apache.commons</groupId>
+					<artifactId>commons-email2-core</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>org.apache.commons</groupId>
+					<artifactId>commons-email2-jakarta</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+		
+		<dependency>
+			<groupId>com.activiti</groupId>
+			<artifactId>activiti-app-dependencies</artifactId>
+			<version>${suite.version}</version>
+			<scope>provided</scope>
+			<type>pom</type>
+			<exclusions>
+				<exclusion>
+					<groupId>org.apache.commons</groupId>
+					<artifactId>commons-email2-core</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>org.apache.commons</groupId>
+					<artifactId>commons-email2-jakarta</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+  </dependencies>
+
+  <repositories>
+		<repository>
+			<id>activiti-enterprise-releases</id>
+			<name>Alfresco EE releases</name>
+			<url>https://artifacts.alfresco.com/nexus/repository/activiti-enterprise-releases</url>
+			<snapshots>
+				<enabled>true</enabled> <!-- Deshabilita los snapshots -->
+			</snapshots>
+		</repository>
+	</repositories>
+
+	 <build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-assembly-plugin</artifactId>
+				<version>3.3.0</version>
+				<configuration>
+					<descriptorRefs>
+						<descriptorRef>jar-with-dependencies</descriptorRef>
+					</descriptorRefs>
+				</configuration>
+				<executions>
+					<execution>
+						<id>make-assembly</id>
+						<phase>package</phase>
+						<goals>
+							<goal>single</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+	</build>
+</project>
