@@ -3,7 +3,7 @@
 ## Prerrequisitos
 
 - [Java Development Kit (JDK) - Version 17](https://www.oracle.com/java/technologies/javase/jdk17-archive-downloads.html)
-- [Maven - Version 3.3](https://maven.apache.org/download.cgi)
+- [Maven - Version 3.8.8](https://maven.apache.org/download.cgi)
 - [Docker - Latest stable version](https://docs.docker.com/desktop/setup/install/windows-install/) 
 - [Un ambiente de Alfresco Process Service](http://52.5.154.124/gitlab/domain/aps/aps-docker-deployment)
 
@@ -47,3 +47,4 @@
 - [ReST call](https://connect.hyland.com/t5/alfresco-blog/rest-call-task-101/ba-p/132329)
 - [get form fields values in a form in aps](https://howtobrothers.com/2018/01/07/how-to-get-form-fields-values-in-a-form-in-alfresco-process-services/)
 - [roadmap domain aps](https://docs.google.com/spreadsheets/d/11zgz-9BtAxeCg2tJ4pik7q9bFpFJHQgGRRHJbDzdUhs/edit?gid=0#gid=0)
+- [aps sdk](https://github.com/OpenPj/alfresco-process-services-project-sdk/tree/master)
