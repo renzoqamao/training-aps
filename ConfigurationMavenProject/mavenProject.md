@@ -92,7 +92,8 @@
 
 ```xml
     <dependencies>
-		<dependency>
+    <!-- Contiene los servicios y la lógica real de BPM Suite. -->
+    <dependency>
 			<groupId>com.activiti</groupId>
 			<artifactId>activiti-app-logic</artifactId>
 			<version>${suite.version}</version>
@@ -108,6 +109,7 @@
 				</exclusion>
 			</exclusions>
 		</dependency>
+		<!-- Contiene los puntos finales REST que utilizan la UI y la API pública. -->
 		<dependency>
 			<groupId>com.activiti</groupId>
 			<artifactId>activiti-app-rest</artifactId>
@@ -124,7 +126,9 @@
 				</exclusion>
 			</exclusions>
 		</dependency>
-		
+	<!--  Contiene todas las dependencias de Process Services. 
+	También es un módulo Maven conveniente (el tipo de empaquetado es pom ) 
+	para el desarrollo. -->		
 		<dependency>
 			<groupId>com.activiti</groupId>
 			<artifactId>activiti-app-dependencies</artifactId>
@@ -142,7 +146,72 @@
 				</exclusion>
 			</exclusions>
 		</dependency>
-	</dependencies>
+		<!--Contiene clases de configuración. -->
+		<dependency>
+			<groupId>com.activiti</groupId>
+			<artifactId>activiti-app</artifactId>
+			<version>${suite.version}</version>
+			<scope>test</scope>
+			<classifier>classes</classifier>
+			<exclusions>
+				<exclusion>
+					<groupId>com.activiti</groupId>
+					<artifactId>aspose-transformation</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>org.apache.commons</groupId>
+					<artifactId>commons-email2-core</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>org.apache.commons</groupId>
+					<artifactId>commons-email2-jakarta</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+		<!--: Contiene la raíz pom. No lo use para desarrollo. 
+		<dependency>
+			<groupId>com.activiti</groupId>
+			<artifactId>activiti-app-root</artifactId>
+			<version>${suite.version}</version>
+			<type>pom</type>
+		</dependency>-->
+		<!-- Contiene los objetos de dominio , anotados con anotaciones JPA para persistencia y 
+		varios repositorios Spring para ejecutar las operaciones reales de la base de datos. 
+		También tiene los pojos de Java de las representaciones JSON que se utilizan, 
+		por ejemplo, como respuestas de los puntos finales REST.-->
+		<dependency>
+			<groupId>com.activiti</groupId>
+			<artifactId>activiti-app-model</artifactId>
+			<version>${suite.version}</version>
+			<type>pom</type>
+			<exclusions>
+				<exclusion>
+					<groupId>org.apache.commons</groupId>
+					<artifactId>commons-email2-core</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>org.apache.commons</groupId>
+					<artifactId>commons-email2-jakarta</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+		<dependency>
+			<groupId>com.activiti</groupId>
+			<artifactId>activiti-app-data</artifactId>
+			<version>${suite.version}</version>
+			<type>pom</type>
+			<exclusions>
+				<exclusion>
+					<groupId>org.apache.commons</groupId>
+					<artifactId>commons-email2-core</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>org.apache.commons</groupId>
+					<artifactId>commons-email2-jakarta</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+  </dependencies>
 ```
 12. Especifique los complementos utilizados en la sección de compilación que Maven necesita para compilar el proyecto.
 
