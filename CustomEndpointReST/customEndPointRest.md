@@ -77,7 +77,7 @@ public class MyRestEndpoint {
 
 Cree un archivo jar que contenga esta clase y agréguelo a la ruta de clases.
 
-Se agregará una clase como esta en el paquete com.activiti.extension.rest a los endpoint ReST de la aplicación (por ejemplo, para usar en la interfaz de usuario), que **utilizan el enfoque de cookies para determinar el usuario**. La URL se asignará a /app. Por lo tanto, si inicia sesión en la interfaz de usuario de BPM Suite, puede ir a http://localhost:8080/activiti-app/app/rest/my-rest-endpoint y ver el resultado del endpoint ReST personalizado:
+Se agregará una clase como esta en el paquete com.activiti.extension.rest a los endpoint ReST de la aplicación (por ejemplo, para usar en la interfaz de usuario), que **utilizan el enfoque de cookies para determinar el usuario**. La URL se asignará a /app. Por lo tanto, si inicia sesión en la interfaz de usuario de BPM Suite, puede ir a http://localhost:9090/activiti-app/app/rest/my-rest-endpoint y ver el resultado del endpoint ReST personalizado:
 
 ```html
 {"fullName":" Administrator","taskCount":8}
@@ -146,7 +146,7 @@ Tenga en cuenta que el endpoint debe tener ``/enterprise`` como primer elemento 
 A la que se puede acceder como a la API normal:
 
 ```cmd
-curl -u admin@app.activiti.com:password http://localhost:8080/activiti-app/api/enterprise/my-api-endpoint
+curl -u admin@app.activiti.com:password http://localhost:9090/activiti-app/api/enterprise/my-api-endpoint
 
 {"fullName":" Administrator","taskCount":8}
 
