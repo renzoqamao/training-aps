@@ -34,6 +34,7 @@
 
 12. [Reportes personalizados](./CustomReports/customReports.md)
 
+13. [Mensajes y señales](./MessageAndSignals/messageAndSignals.md)
 
 # Referencias
 
