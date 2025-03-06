@@ -62,7 +62,7 @@ GET api/enterprise/app-version
 
 Response:
 
-```
+```json
 {
    "edition": "Alfresco Activiti Enterprise BPM Suite",
    "majorVersion": "1",
@@ -82,7 +82,7 @@ GET api/enterprise/profile
 
 Response:
 
-```
+```json
 {
      "tenantId": 1,
      "firstName": "John",
@@ -152,7 +152,7 @@ Para actualizar la información del usuario (nombre, apellido o correo electrón
 POST api/enterprise/profile
 ```
 
-```
+```json
 {
     "firstName" : "John",
     "lastName" : "Doe",
@@ -172,7 +172,7 @@ Para cambiar la contraseña:
 POST api/enterprise/profile-password
 ```
 
-```
+```json
 {
     "oldPassword" : "12345",
     "newPassword" : "6789"
@@ -191,7 +191,7 @@ La solicitud de API REST correspondiente para obtener esta información es:
 GET api/enterprise/runtime-app-definitions
 ```
 
-```
+```json
 {
      "size": 3,
      "total": 3,
@@ -239,7 +239,7 @@ La solicitud de API REST correspondiente para obtener esta información es:
 GET api/enterprise/runtime-app-definitions
 ```
 
-```
+```json
 {
      "size": 3,
      "total": 3,
@@ -287,7 +287,7 @@ Obtenga una lista de definiciones de procesos (visibles dentro del inquilino del
 GET api/enterprise/process-definitions
 ```
 
-```
+```json
 {
      "size": 5,
      "total": 5,
@@ -330,13 +330,13 @@ POST api/enterprise/process-definitions/{processDefinitionId}/identitylinks
 ```
 Cuerpo de la solicitud (usuario):
 
-```
+```json
 {
 "user" : "1"
 }
 ```
 Cuerpo de la solicitud (grupo):
-```
+```json
 {
 "group" : "1001"
 }
@@ -357,7 +357,7 @@ GET api/enterprise/process-definitions/{process-definition-id}/start-form
 ```
 Ejemplo de respuesta:
 
-```
+```json
 {
   "processDefinitionId": "p1:2:2504",
   "processDefinitionName": "p1",
@@ -505,7 +505,7 @@ con un cuerpo json que contenga los parámetros de consulta. Los siguientes par�
 * size (para paginación, predeterminado 25)
 
 Ejemplo de respuesta:
-```
+```json
 {
 "size": 6,
 "total": 6,
@@ -570,7 +570,7 @@ Para actualizar variables existentes en una instancia de proceso:
 PUT api/enterprise/process-instances/{processInstanceId}/variables
 ```
 Ejemplo de respuesta:
-```
+```json
 {
 "name": "myVariable",
 "type": "string",
@@ -633,7 +633,7 @@ Los siguientes parámetros están disponibles:
 
 Ejemplo de respuesta:
 
-```
+```json
 {
     "size": 6,
     "total": 6,
@@ -664,7 +664,7 @@ Ejemplo de respuesta:
     ]
 }
 ```
-## Task Details
+### Task Details
 
 ```
 GET api/enterprise/tasks/{taskId}
@@ -672,7 +672,7 @@ GET api/enterprise/tasks/{taskId}
 La respuesta es similar a la respuesta de la lista.
 
 
-## Task Form
+### Task Form
 ```
 GET api/enterprise/task-forms/{taskId}
 ```
@@ -697,7 +697,7 @@ Para guardar un formulario de tarea:
 POST api/enterprise/task-forms/{taskid}/save-form
 ```
 Ejemplo de respuesta:
-```
+```json
 {
 
 "values": {"formtextfield": "snicker doodle"},
@@ -719,7 +719,7 @@ GET api/enterprise/task-forms/{taskid}/variables
 
 Ejemplo de respuesta:
 
-```
+```json
 [
 {
 "id": "initiator",
@@ -738,3 +738,174 @@ Ejemplo de respuesta:
 }
 ]
 ```
+
+## Process Engine ReST API
+
+La API REST de Process Engine es un equivalente compatible de la API de código abierto de Activiti. Esto significa que todas las operaciones descritas en la Guía del usuario de Activiti están disponibles tal como se documentan allí, excepto los puntos finales REST que no son relevantes para el producto empresarial (por ejemplo, formularios, ya que se implementan de manera diferente).
+
+Esta API REST está disponible en
+```
+<your-server-and-context-root>/api/
+```
+Por ejemplo, la obtención de definiciones de procesos se describe como un HTTP GET en el repositorio/process-definitions. Esto se asigna a:
+
+```
+<your-server-and-context-root>/api/repository/process-definitions
+```
+
+> **Nota**: Puede controlar el acceso a la API de Engine mediante la capacidad “Acceder a la API REST de Activiti” (Administración de identidades > Capacidades). Esto coincide con la API de Activiti Engine (Java), que es independiente de los permisos de usuario. Esto significa que al llamar a cualquiera de las operaciones, el identificador del inquilino siempre debe proporcionarse en la URL, incluso si el sistema no tiene multitenencia (siempre habrá un inquilino en ese caso): por ejemplo, ``<your-server-and-context-root>/api/repository/process-definitions?tenantId=tenant_1``.
+
+
+### Historic processes and tasks
+
+En esta sección se incluyen ejemplos para consultar instancias de procesos y tareas históricas en la API de Process Services. Puede consultar instancias de procesos y tareas históricas para obtener información sobre instancias de procesos o tareas pasadas y en curso.
+
+#### Consultas de instancias de procesos históricos
+
+Para ejecutar una consulta de instancia de proceso histórico:
+
+```
+POST api/enterprise/historic-process-instances/query
+```
+
+Para ejecutar una consulta de instancia de tarea histórica:
+
+```
+POST api/enterprise/historic-tasks/query
+```
+
+#### Obtener instancias de procesos históricos
+
+La siguiente tabla enumera los parámetros de solicitud que se deben utilizar en el cuerpo de la solicitud JSON `POST`. Por ejemplo, para filtrar instancias de procesos históricos que se completaron antes de una fecha determinada (`startedBefore`):
+
+```
+POST api/enterprise/historic-process-instances/query
+```
+
+Con un cuerpo de solicitud JSON:
+
+```json
+{
+  "startedBefore": "2016-06-16"
+}
+```
+
+Ejemplo de respuesta:
+
+```json
+{
+  "size": 25,
+  "total": 200,
+  "start": 0,
+  "data": [
+    {
+      "id": "2596",
+      "name": "Ejemplo de formato de fecha - 7 de junio de 2016",
+      "businessKey": null,
+      "processDefinitionId": "dateformatexample:1:2588",
+      "tenantId": "tenant_1",
+      "started": "2016-06-07T14:18:34.433+0000",
+      "ended": null,
+      "startedBy": {
+        "id": 1,
+        "firstName": null,
+        "lastName": "Administrador",
+        "email": "admin@app.activiti.com"
+      }
+    }
+  ]
+}
+```
+
+Donde:
+
+- `size` es el tamaño de la página o el número de elementos por página. Por defecto, el valor es 25.
+- `start` es la página en la que comenzar. Las páginas se cuentan de 0 a N. Por defecto, el valor es 0, lo que significa que 0 será la primera página.
+
+Parámetros de solicitud:
+
+- `processInstanceId`: ID de la instancia de proceso histórico.
+- `processDefinitionKey`: Clave de definición del proceso de la instancia de proceso histórico.
+- `processDefinitionId`: ID de definición del proceso de la instancia de proceso histórico.
+- `businessKey`: Clave de negocio de la instancia de proceso histórico.
+- `involvedUser`: Usuario involucrado en la instancia de proceso histórico. Donde `InvolvedUser` es el ID del usuario.
+- `finished`: Indica si la instancia de proceso histórico está completa. Los valores pueden ser `true` o `false`.
+- `superProcessInstanceId`: ID opcional del proceso padre de la instancia de proceso histórico.
+- `excludeSubprocesses`: Devuelve solo instancias de procesos históricos que no son subprocesos.
+- `finishedAfter`: Devuelve instancias de procesos históricos que finalizaron después de la fecha dada. La fecha se muestra en formato `yyyy-MM-ddTHH:MM:SS`.
+- `finishedBefore`: Devuelve instancias de procesos históricos que finalizaron antes de la fecha dada. La fecha se muestra en formato `yyyy-MM-ddTHH:MM:SS`.
+- `startedAfter`: Devuelve instancias de procesos históricos que comenzaron después de la fecha dada. La fecha se muestra en formato `yyyy-MM-ddTHH:MM:SS`.
+- `startedBefore`: Devuelve instancias de procesos históricos que comenzaron antes de la fecha dada. La fecha se muestra en formato `yyyy-MM-ddTHH:MM:SS`.
+- `startedBy`: Devuelve solo instancias de procesos históricos que fueron iniciadas por el usuario seleccionado.
+- `includeProcessVariables`: Indica si se deben devolver las variables de la instancia de proceso histórico.
+- `tenantId`: Devuelve instancias con el `tenantId` dado.
+- `tenantIdLike`: Devuelve instancias con un `tenantId` similar al valor dado.
+- `withoutTenantId`: Si es `true`, solo devuelve instancias sin un `tenantId` establecido. Si es `false`, se ignora el parámetro `withoutTenantId`.
+
+#### Obtener instancias de tareas históricas
+
+La siguiente tabla enumera los parámetros de solicitud que se pueden utilizar en el cuerpo de la solicitud JSON `POST`. Por ejemplo, en el caso de `taskCompletedAfter`:
+
+```
+POST api/enterprise/historic-tasks/query
+```
+
+Con un cuerpo de solicitud JSON:
+
+```json
+{
+  "taskCompletedAfter": "2016-06-16",
+  "size": 50,
+  "start": 0
+}
+```
+
+Ejemplo de respuesta:
+
+```json
+{
+  "size": 4,
+  "total": 4,
+  "start": 0,
+  "data": [
+    {
+      "id": "7507",
+      "name": "mi tarea",
+      "assignee": {
+        "id": 1000,
+        "firstName": "Homer",
+        "lastName": "Simpson",
+        "email": "homer.simpson@gmail.com"
+      },
+      "created": "2016-06-17T15:14:26.938+0000",
+      "dueDate": null,
+      "endDate": "2016-06-17T16:09:39.197+0000",
+      "duration": 3312259,
+      "priority": 50
+    }
+  ]
+}
+```
+
+Parámetros de solicitud:
+
+- `taskId`: ID de la instancia de tarea histórica.
+- `processInstanceId`: ID de la instancia de proceso de la instancia de tarea histórica.
+- `processDefinitionKey`: Clave de definición del proceso de la instancia de tarea histórica.
+- `processDefinitionKeyLike`: Clave de definición del proceso de la instancia de tarea histórica que coincide con el valor dado.
+- `processDefinitionId`: ID de definición del proceso de la instancia de tarea histórica.
+- `processDefinitionName`: Nombre de la definición del proceso de la instancia de tarea histórica.
+- `processDefinitionNameLike`: Nombre de la definición del proceso de la instancia de tarea histórica que coincide con el valor dado.
+- `processBusinessKey`: Clave de negocio de la instancia de proceso de la instancia de tarea histórica.
+- `processBusinessKeyLike`: Clave de negocio de la instancia de proceso de la instancia de tarea histórica que coincide con el valor dado.
+- `executionId`: ID de ejecución de la instancia de tarea histórica.
+- `taskDefinitionKey`: Clave de definición de la tarea para tareas que forman parte de un proceso.
+- `taskName`: Nombre de la instancia de tarea histórica.
+- `taskNameLike`: Nombre de la instancia de tarea histórica con operador `like`.
+- `taskDescription`: Descripción de la instancia de tarea histórica.
+- `taskDescriptionLike`: Descripción de la instancia de tarea histórica con operador `like`.
+- `taskDeleteReason`: Razón de eliminación de la instancia de tarea histórica.
+- `taskDeleteReasonLike`: Razón de eliminación de la instancia de tarea histórica con operador `like`.
+- `taskAssignee`: Asignado de la instancia de tarea histórica.
+- `taskAssigneeLike`: Asignado de la instancia de tarea histórica con operador `like`.
+ 
