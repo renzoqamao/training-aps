@@ -28,7 +28,7 @@ Si esta variable es null , se insertará un valor predeterminado en su lugar. Ta
 ```
 
 
-**Nota**: Los tipos de campos de formulario, como los de menú desplegable, botón de opción y escritura anticipada (typehead), utilizan myVariable_ID para el ID y myVariable_LABEL para el valor de la etiqueta. El ID es el valor real que utilizan las tareas de servicio y se insertan de forma predeterminada. Para mostrar el valor de la etiqueta en el documento generado, utilice myVariable_LABEL.
+> **Nota**: Los tipos de campos de formulario, como los de menú desplegable, botón de opción y escritura anticipada (typehead), utilizan myVariable_ID para el ID y myVariable_LABEL para el valor de la etiqueta. El ID es el valor real que utilizan las tareas de servicio y se insertan de forma predeterminada. Para mostrar el valor de la etiqueta en el documento generado, utilice myVariable_LABEL.
 
 Al utilizar la tarea Generar documento , asegúrese de utilizar la sintaxis correcta para las variables y expresiones. Escriba las variables entre los caracteres ``<<[..]>>`` `
 

@@ -48,7 +48,7 @@ Se utilizaré la biblioteca Epoch, descarga los siguiente archivos desde su siti
 - [d3.min.js](https://raw.githubusercontent.com/mbostock/d3/v3.5.6/d3.min.js)
 - [epoch.min.js](https://raw.githubusercontent.com/fastly/epoch/0.6.0/epoch.min.js)
 
-**nota**: ya que la biblioteca epoch depende de d3, entonces d3 debe estar primero en la tabla y epoch en segundo lugar.
+>**Nota**: ya que la biblioteca epoch depende de d3, entonces d3 debe estar primero en la tabla y epoch en segundo lugar.
 
 ![importLibScripts](./images/importLibScripts.png)
 
@@ -252,7 +252,7 @@ angular
 
 Probamos creando una aplicación con la plantilla de formulario creada.
 
-**Nota** : el campo creado tiene que tener el id ``selectedMonth``.
+>**Nota** : el campo creado tiene que tener el id ``selectedMonth``.
 
 ## Ejemplo 3
 
@@ -364,7 +364,7 @@ angular.module('activitiApp')
 ![pokemon](./images/example3/pokemon.png)
 
 
-**Nota** : el campo creado tiene que tener el id ``selectedPokemon``.
+>**Nota** : el campo creado tiene que tener el id ``selectedPokemon``.
 ## Ejemplo 4
 
 Implementación de un campo de formulario de imagen con hipervínculo. En el cual este campo necesita de parametros adicionales para configurar el campo que se incluye en el formulario.

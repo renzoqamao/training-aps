@@ -73,7 +73,7 @@ public class MyRestEndpoint {
 
 }
 ```
-**Nota**: el bean debe estar en el paquete com.activiti.extension.rest para poder encontrarlo.
+> **Nota**: el bean debe estar en el paquete com.activiti.extension.rest para poder encontrarlo.
 
 Cree un archivo jar que contenga esta clase y agréguelo a la ruta de clases.
 
@@ -152,7 +152,7 @@ curl -u admin@app.activiti.com:password http://localhost:9090/activiti-app/api/e
 
 ```
 
-**Nota**: Debido a la carga de clases, actualmente no es posible colocar archivos jar con estos ReST endpoint personalizados en la ruta de clases global o común (por ejemplo, tomcat/lib para Tomcat). Deben colocarse en la ruta de clases de la aplicación web (por ejemplo, WEB-INF/lib).
+>**Nota**: Debido a la carga de clases, actualmente no es posible colocar archivos jar con estos ReST endpoint personalizados en la ruta de clases global o común (por ejemplo, tomcat/lib para Tomcat). Deben colocarse en la ruta de clases de la aplicación web (por ejemplo, WEB-INF/lib).
 
 
 # Anulaciones de seguridad para servicio ReST personalizado
@@ -161,7 +161,7 @@ Puede cambiar la configuración de seguridad predeterminada de los endpoints de 
 
 De manera similar, puede anular la configuración de seguridad predeterminada basada en cookies+token con los endpoints de REST regulares (aquellos que utiliza la IU) implementando la interfaz ``com.activiti.api.security.AlfrescoWebAppSecurityOverride``.
 
-**Nota**: La aplicación web y la API utilizan la misma seguridad HTTP de Spring para la autenticación. Para distinguir las configuraciones de seguridad, debe especificar la ruta a la que se aplica la configuración. Estas utilizan /app y /api de manera predeterminada. Por ejemplo, la configuración de la API debe comenzar con lo siguiente:
+>**Nota**: La aplicación web y la API utilizan la misma seguridad HTTP de Spring para la autenticación. Para distinguir las configuraciones de seguridad, debe especificar la ruta a la que se aplica la configuración. Estas utilizan /app y /api de manera predeterminada. Por ejemplo, la configuración de la API debe comenzar con lo siguiente:
 
 httpSecurity.antMatcher("/api/**")
 
