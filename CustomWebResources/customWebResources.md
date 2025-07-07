@@ -359,4 +359,6 @@ Este enfoque es útil para realizar pruebas ya que permite una carga dinamica. S
 
 > Nota: Para que funcione hay que cambiar las versiones de los scripts. En `index.html` cambiar la version de carga de `app-cfg.js` (`<script src="../scripts/app-cfg.js?v=X"></script>`) donde X es la version. Igualmente para los scripts personalizados.
 
+![implementación final](./images/Notes.png)
+
 ![form editor template](./images/FormEditorTemplate.png)
