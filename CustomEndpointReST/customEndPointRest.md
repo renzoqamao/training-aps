@@ -596,5 +596,5 @@ Añadir al pom.xml
 
 Consultamos el siguiente A traves del postman, navegador etc.
 ```cmd
-http://localhost:9090/activiti-app/api/enterprise/secure-data
+http://localhost:9090/activiti-app/api/enterprise/public/secure-data
 ```
