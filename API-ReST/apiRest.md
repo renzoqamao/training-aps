@@ -747,7 +747,7 @@ Esta API REST está disponible en
 ```
 <your-server-and-context-root>/api/
 ```
-Por ejemplo, la obtención de definiciones de procesos se describe como un HTTP GET en el repositorio/process-definitions. Esto se asigna a:
+Por ejemplo, la obtención de definiciones de procesos se describe como un HTTP GET en el repository/process-definitions. Esto se asigna a:
 
 ```
 <your-server-and-context-root>/api/repository/process-definitions
