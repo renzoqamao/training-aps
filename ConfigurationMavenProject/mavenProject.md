@@ -88,7 +88,7 @@
 	</repositories>
 ```
 
-11. Declare todas las dependencias que su proyecto necesita para obtener bibliotecas externas.
+11. Declare todas las dependencias que su proyecto necesita para obtener bibliotecas externas. Para APS 25 no es necesario las exclusiones.
 
 ```xml
     <dependencies>
