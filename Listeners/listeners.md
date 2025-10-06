@@ -44,9 +44,12 @@ import org.activiti.engine.delegate.DelegateExecution;
 
 public class JavaExecutionListener implements ExecutionListener{
     @Override
-    public void notify(DelegateExecution delegateExecution) throws Exception{
-        final String currentActivityName = delegateExecution.getCurrentActivityName();
-        System.out.println("Starting the '" + currentActivityName + "' activity." );
+    public void notify(DelegateExecution delegateExecution){
+        final String currentActivityId = delegateExecution.getCurrentActivityId();
+        String activityName = null;
+        FlowElement FlowElement = delegateExecution.getCurrentFlowElement();
+        activityName = FlowElement.getName();
+        System.out.println("Starting the '" + activityName + "' -> " + currentActivityId + ", activity." );
     }
 }
 ```
@@ -62,20 +65,27 @@ El executionListener va a estar definido en el evento final.
 package com.activiti.extension.bean;
 
 import org.activiti.engine.delegate.ExecutionListener;
+import org.activiti.bpmn.model.FlowElement;
 import org.activiti.engine.delegate.DelegateExecution;
 import org.springframework.stereotype.Component;
 
-@Component("myExecutionListener");
+@Component("myExecutionListener")
 public class SpringExecutionListener implements ExecutionListener{
     @Override
-    public void notify(DelegateExecution delegateExecution) throws Exception{
-        
-        System.out.println("Ending the '" + currentActivityName + "' activity." );
+    public void notify(DelegateExecution delegateExecution){
+        final String currentActivityId = delegateExecution.getCurrentActivityId();
+        String activityName = null;
+        FlowElement FlowElement = delegateExecution.getCurrentFlowElement();
+        activityName = FlowElement.getName();
+        System.out.println("Ending the '" + activityName + "' -> " + currentActivityId + ", activity." );
     }
 
     public void writeMessage(DelegateExecution delegateExecution, String message){
-        final String currentActivityName = delegateExecution.getCurrentActivityName();
-        System.out.println(currentActivityName + "says, '" + message + "'");
+        final String currentActivityId = delegateExecution.getCurrentActivityId();
+        String activityName = null;
+        FlowElement FlowElement = delegateExecution.getCurrentFlowElement();
+        activityName = FlowElement.getName();
+        System.out.println(activityName +" with id : " + currentActivityId + " says, '" + message + "'");
     }
 }
 ```
@@ -122,7 +132,7 @@ public class SpringTaskListener implements TaskListener{
         System.out.println( name + "has been assigned to ID '"+ assignee + '\'');
     }
 
-    public void printEvent(DelegateTask delegateTask){
+    public void writeEvent(DelegateTask delegateTask){
         System.out.println( delegateTask.getName()+ " event '" + delegateTask.getEventName() + '\'');
     }
 }
@@ -244,8 +254,6 @@ package pe.com.domain.delegate;
 
 import org.activiti.engine.delegate.event.ActivitiEvent;
 import org.activiti.engine.delegate.event.ActivitiEventListener;
-import org.springframework.stereotype.Component;
-
 
 public class JavaEventListener implements ActivitiEventListener{
     @Override
@@ -309,6 +317,11 @@ public class MyRuntimeListener implements RuntimeEventListener{
 }
 ```
 
+En Alfresco Process Services 24.x (y en Activiti), el método isFailOnException() en un listener de eventos (RuntimeEventListener) indica si una excepción lanzada dentro del listener debe hacer que la ejecución del proceso falle.
+* Si isFailOnException() retorna true, cualquier excepción no controlada en el listener provocará que la ejecución del proceso falle y se detenga.
+* Si retorna false, las excepciones lanzadas en el listener serán ignoradas y el proceso continuará normalmente.
+
+Esto te permite decidir si los errores en la lógica del listener deben afectar el flujo del proceso o no. Por lo general, se deja en false para evitar que errores en la auditoría, logging u otras tareas secundarias interrumpan el proceso principal.
 
 > **Nota**:
 - Clase:  implementación Java que define la lógica personalizada que se ejecutará en un punto específico del proceso.
