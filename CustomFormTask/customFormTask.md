@@ -152,6 +152,9 @@ formRendered:function(form, scope) {
             console.log( scope.$root);
             var currentUser = scope.$root.account;
             console.log(currentUser);
+            var campoInput = form.fields[0].fields[1].find(function(x){ return x.id= 'userinput'}); // userinput id del campo.
+            campoInput.value = currentUser.firstName + ' ' + currentUser.lastName;
+            
         }
 ```
 
