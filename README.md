@@ -49,3 +49,4 @@
 - [get form fields values in a form in aps](https://howtobrothers.com/2018/01/07/how-to-get-form-fields-values-in-a-form-in-alfresco-process-services/)
 - [roadmap domain aps](https://docs.google.com/spreadsheets/d/11zgz-9BtAxeCg2tJ4pik7q9bFpFJHQgGRRHJbDzdUhs/edit?gid=0#gid=0)
 - [aps sdk](https://github.com/OpenPj/alfresco-process-services-project-sdk/tree/master)
+- [business data integration made easy with data models](https://connect.hyland.com/t5/alfresco-blog/business-data-integration-made-easy-with-data-models/ba-p/135150)
