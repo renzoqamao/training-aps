@@ -165,61 +165,419 @@ De manera similar, puede anular la configuración de seguridad predeterminada ba
 
 httpSecurity.antMatcher("/api/**")
 
-## Ejemplo de creación de enpoint ReST Público
+## Ejemplo de anulación API ReST
 
-Creamos el siguiente componente que implementa ``AlfrescoApiSecurityOverride`` para permitir el acceso no autenticado a ``/api/enterprise/public/**``.
+Creamos el siguiente componente que implementa ``AlfrescoApiSecurityOverride`` para permitir permitir la autenticación con JWT.
+
+### Prerrequisitos
+
+Añadir al pom.xml
+
+    ```xml
+    <dependencies>
+        <dependency>
+            <groupId>jakarta.servlet</groupId>
+            <artifactId>jakarta.servlet-api</artifactId>
+            <version>5.0.0</version>
+            <scope>provided</scope>
+        <dependency>
+
+         <!-- Dependencia para java-jwt -->
+    <dependency>
+        <groupId>com.auth0</groupId>
+        <artifactId>java-jwt</artifactId>
+        <version>4.4.0</version>
+    </dependency>
+    </dependencies>
+  
+    ```
+
+### desarrollo
+
+1. Creación de la anulación de seguridad
+    ```java
+    package com.activiti.extension.conf;
+
+    import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+    import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+    import com.activiti.api.security.AlfrescoApiSecurityOverride;
+    import org.springframework.stereotype.Component;
+
+    @Component
+    public class JwtApiSecurityConfig implements AlfrescoApiSecurityOverride {
+
+        private final JwtAuthenticationFilter jwtAuthenticationFilter;
+
+        public JwtApiSecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter) {
+            this.jwtAuthenticationFilter = jwtAuthenticationFilter;
+        }
+
+        @Override
+        public void configure(HttpSecurity http) throws Exception {
+            http
+            .securityMatcher("/api/**")
+            .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+        }
+    }
+    ```
+
+2. Crear el filtro de autenticación JWT (JwtAuthenticationFilter)
+
+    ```java
+    package com.activiti.extension.conf;
+
+    import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+    import org.springframework.security.core.context.SecurityContextHolder;
+    import org.springframework.security.core.userdetails.UserDetails;
+    import org.springframework.security.core.userdetails.UserDetailsService;
+    import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
+    import org.springframework.stereotype.Component;
+    import org.springframework.web.filter.OncePerRequestFilter;
+
+    import jakarta.servlet.FilterChain;
+    import jakarta.servlet.ServletException;
+    import jakarta.servlet.http.HttpServletRequest;
+    import jakarta.servlet.http.HttpServletResponse;
+    import java.io.IOException;
+
+    @Component
+    public class JwtAuthenticationFilter extends OncePerRequestFilter {
+
+        private final JwtUtil jwtUtil;
+        private final UserDetailsService userDetailsService;
+
+        public JwtAuthenticationFilter(JwtUtil jwtUtil, UserDetailsService userDetailsService) {
+            this.jwtUtil = jwtUtil;
+            this.userDetailsService = userDetailsService;
+        }
+
+        @Override
+        protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+                throws ServletException, IOException {
+            String authHeader = request.getHeader("Authorization");
+            String token = null;
+            String username = null;
+
+            if (authHeader != null && authHeader.startsWith("Bearer ")) {
+                token = authHeader.substring(7);
+                username = jwtUtil.validateToken(token);
+            }
+
+            if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+                if (userDetails != null) {
+                    UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
+                            userDetails, null, userDetails.getAuthorities());
+                    authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                    SecurityContextHolder.getContext().setAuthentication(authentication);
+                }
+            }
+
+            filterChain.doFilter(request, response);
+        }
+    }
+    ```
+3. Crear el proveedor de tokens JWT (JwtUtil)
+
+    ```java
+    package com.activiti.extension.conf;
+
+    import com.auth0.jwt.JWT;
+    import com.auth0.jwt.algorithms.Algorithm;
+    import com.auth0.jwt.exceptions.JWTVerificationException;
+    import com.auth0.jwt.interfaces.DecodedJWT;
+    import com.auth0.jwt.interfaces.JWTVerifier;
+    import org.springframework.beans.factory.annotation.Value;
+    import org.springframework.stereotype.Component;
+
+    import java.util.Date;
+
+    @Component
+    public class JwtUtil {
+
+        @Value("${security.jwt.token.secret-key:defaultSecretKey}")
+        private String secretKey;
+
+        @Value("${security.jwt.token.expire-length:3600000}") // 1 hora en milisegundos
+        private long validityInMilliseconds;
+
+        public String generateToken(String username) {
+            Date now = new Date();
+            Date expiration = new Date(now.getTime() + validityInMilliseconds);
+
+            return JWT.create()
+                    .withSubject(username)
+                    .withIssuedAt(now)
+                    .withExpiresAt(expiration)
+                    .sign(Algorithm.HMAC256(secretKey));
+        }
+
+        public String validateToken(String token) {
+            try {
+                JWTVerifier verifier = JWT.require(Algorithm.HMAC256(secretKey)).build();
+                DecodedJWT decodedJWT = verifier.verify(token);
+                return decodedJWT.getSubject();
+            } catch (JWTVerificationException e) {
+                return null;
+            }
+        }
+    }
+    ```
+
+
+4. Crear un controlador REST para manejar la autenticación y proporcionar el token JWT:
+
+    ```java
+    package com.activiti.extension.api;
+
+    import org.springframework.beans.factory.annotation.Autowired;
+    import org.springframework.http.ResponseEntity;
+    import org.springframework.security.authentication.AuthenticationManager;
+    import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+    import org.springframework.security.core.Authentication;
+    import org.springframework.security.core.AuthenticationException;
+    import org.springframework.web.bind.annotation.*;
+
+    import com.activiti.extension.conf.JwtUtil;
+
+    @RestController
+    @RequestMapping("/enterprise/auth")
+    public class JwtAuthController {
+        @Autowired
+        private AuthenticationManager authenticationManager;
+        @Autowired
+        private JwtUtil jwtUtil;
+
+        @PostMapping("/login")
+        public String login(@RequestParam String username, @RequestParam String password) {
+            try {
+                Authentication authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(username, password)
+                );
+                return jwtUtil.generateToken(username);
+            } catch (AuthenticationException e) {
+                throw new RuntimeException("Credenciales inválidas");
+            }
+        }
+
+        /**
+        * Endpoint protegido que solo puede ser accedido con un token JWT válido.
+        */
+        @GetMapping("/protected/data")
+        public ResponseEntity<?> getProtectedData() {
+            return ResponseEntity.ok().body("{\"message\": \"Acceso permitido con token válido\"}");
+        }
+    }
+    ```
+
+
+## Ejemplo de anulación de la aplicación Web
 
 ```java
 package com.activiti.extension.bean;
-
-import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.web.servlet.util.matcher.MvcRequestMatcher;
-import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+import com.activiti.api.security.AlfrescoWebAppSecurityOverride;
 import org.springframework.stereotype.Component;
-import org.springframework.web.servlet.handler.HandlerMappingIntrospector;
-
-import com.activiti.api.security.AlfrescoApiSecurityOverride;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 
 @Component
-public class PublicEndpointSecurityOverride implements AlfrescoApiSecurityOverride {
-
+public class WebAppSecurityConfig implements AlfrescoWebAppSecurityOverride {
     @Override
-    public void configure(HttpSecurity http) throws Exception {
-         http
-            .securityMatcher(new AntPathRequestMatcher("/api/enterprise/public/**")) // Solo aplica a esta ruta
-            .authorizeHttpRequests(auth -> auth
-                .anyRequest().permitAll() // Permitir acceso sin autenticación solo para esta ruta
-            )
-            .csrf().disable(); // Opcional: Deshabilitar CSRF para las rutas públicas
-        
-    }
-
-}
-```
-
-Creamos el endpoint público:
-
-```java
-package com.activiti.extension.api;
-
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-
-
-@RestController
-@RequestMapping("/enterprise/public/action")
-public class ActionPublic {
-
-    @GetMapping("/status")
-    public ResponseEntity<String> getStatus() {
-        return ResponseEntity.ok("La aplicación está funcionando correctamente.");
+    public void configure(HttpSecurity httpSecurity) throws Exception {
+        httpSecurity
+            .antMatcher("/app/**")                            // Configura solo las URL que comienzan con /app/
+            .authorizeRequests()
+            .antMatchers("/app/login", "/app/public/**")
+                .permitAll()                                  // Permite sin autenticación la página de login y recursos públicos
+            .anyRequest().authenticated()                     // Requiere autenticación para cualquier otra URL /app/**
+            .and()
+            .formLogin()
+                .loginPage("/app/login")                      // Página de inicio de sesión personalizada
+                .defaultSuccessUrl("/app/home")               // URL por defecto tras login exitoso
+                .permitAll()                                  // El login (y sus recursos) son accesibles para todos
+            .and()
+            .logout()
+                .logoutUrl("/app/logout")
+                .logoutSuccessUrl("/app/login?logout")
+                .permitAll();
+            // (CSRF está habilitado por defecto; no se deshabilita aquí para las rutas /app/**)
     }
 }
+
 ```
 
 Consultamos el siguiente A traves del postman, navegador etc.
 ```cmd
-http://localhost:9090/activiti-app/api/enterprise/public/action/status
+curl -X POST http://localhost:9090/activiti-app/api/enterprise/auth/login \
+     -H "Content-Type: application/json" \
+     -d '{"username": "admin@app.activiti.com", "password": "admin"}'
+
+```
+
+## Ejemplo de extensión de la seguridad de API ReST
+
+Crearemos un endpoint ReST que no necesita enviar autenticación.
+
+### prerequisitos
+
+Añadir al pom.xml
+
+    ```xml
+    <dependencies>
+        <dependency>
+            <groupId>jakarta.servlet</groupId>
+            <artifactId>jakarta.servlet-api</artifactId>
+            <version>5.0.0</version>
+            <scope>provided</scope>
+        <dependency>
+    </dependencies>
+  
+    ```
+### desarrollo
+
+1. Creación del controller. 
+    ```java
+    package com.activiti.extension.api;
+
+    import org.springframework.http.ResponseEntity;
+    import org.springframework.security.core.context.SecurityContextHolder;
+    import org.springframework.web.bind.annotation.GetMapping;
+    import org.springframework.web.bind.annotation.PostMapping;
+    import org.springframework.web.bind.annotation.RequestMapping;
+    import org.springframework.web.bind.annotation.RestController;
+    import org.springframework.security.core.Authentication;
+
+    @RestController
+    @RequestMapping("/enterprise")
+    public class PublicController {
+
+        @GetMapping("/secure-data")
+        public ResponseEntity<String> secureData() {
+            return ResponseEntity.ok("Datos seguros accesibles por admin");
+        }
+    }
+    ```
+
+2. Creación de un Request Mutable
+    ```java
+    package com.activiti.extension.conf;
+
+    import jakarta.servlet.http.HttpServletRequest;
+    import jakarta.servlet.http.HttpServletRequestWrapper;
+    import java.util.*;
+
+    public class MutableHttpServletRequest extends HttpServletRequestWrapper {
+        // Mapa que almacenará los encabezados personalizados
+        private final Map<String, String> customHeaders;
+
+        public MutableHttpServletRequest(HttpServletRequest request) {
+            super(request);
+            this.customHeaders = new HashMap<>();
+        }
+
+        // Método para agregar o reemplazar un encabezado
+        public void putHeader(String name, String value) {
+            this.customHeaders.put(name, value);
+        }
+
+        @Override
+        public String getHeader(String name) {
+            // Primero, verifica en los encabezados personalizados
+            String headerValue = customHeaders.get(name);
+            if (headerValue != null) {
+                return headerValue;
+            }
+            // Si no se encuentra, devuelve el encabezado original
+            return super.getHeader(name);
+        }
+
+        @Override
+        public Enumeration<String> getHeaderNames() {
+            // Crea una lista de los nombres de los encabezados personalizados
+            Set<String> set = new HashSet<>(customHeaders.keySet());
+            // Agrega los nombres de los encabezados originales
+            Enumeration<String> e = super.getHeaderNames();
+            while (e.hasMoreElements()) {
+                String n = e.nextElement();
+                set.add(n);
+            }
+            // Devuelve una enumeración de todos los encabezados
+            return Collections.enumeration(set);
+        }
+
+        @Override
+        public Enumeration<String> getHeaders(String name) {
+            // Si el encabezado está en los personalizados, devuelve su valor
+            if (customHeaders.containsKey(name)) {
+                return Collections.enumeration(Collections.singleton(customHeaders.get(name)));
+            }
+            // De lo contrario, devuelve los encabezados originales
+            return super.getHeaders(name);
+        }
+    }
+    ```
+
+3. Creación de Extensión de la seguridad del API ReST
+    ```java
+    package com.activiti.extension.conf;
+    import org.springframework.context.annotation.Configuration;
+    import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+    import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+    import org.springframework.web.filter.OncePerRequestFilter;
+
+    import com.activiti.api.security.AlfrescoApiSecurityExtender;
+
+    import org.springframework.security.core.Authentication;
+    import org.springframework.security.core.authority.SimpleGrantedAuthority;
+    import org.springframework.security.core.context.SecurityContextHolder;
+    import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+    import jakarta.servlet.FilterChain;
+    import jakarta.servlet.ServletException;
+    import jakarta.servlet.http.HttpServletRequest;
+    import jakarta.servlet.http.HttpServletResponse;
+    import java.io.IOException;
+    import java.util.Base64;
+    import java.util.Collections;
+    import java.util.List;
+
+    import org.slf4j.Logger;
+    import org.slf4j.LoggerFactory;
+    @Configuration
+    public class SecureDataApiSecurityOverride implements AlfrescoApiSecurityExtender  {
+
+        protected static final Logger logger = LoggerFactory.getLogger(SecureDataApiSecurityOverride.class);
+
+        @Override
+        public void configure(HttpSecurity httpSecurity) throws Exception {
+            httpSecurity
+                .addFilterBefore(new AdminAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
+        }
+
+        private static class AdminAuthenticationFilter extends OncePerRequestFilter {
+            
+            @Override
+            protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
+                    throws IOException, ServletException {
+                logger.info("URI :"  + request.getRequestURI() );
+                MutableHttpServletRequest mutableRequest = new MutableHttpServletRequest(request);
+                if ("/activiti-app/api/enterprise/secure-data".equals(request.getRequestURI())) {
+                    // Autenticar como usuario 'admin'
+                    logger.info("URI IN IF :"  + request.getRequestURI() );
+                    // Envuelve la solicitud original
+                    String credenciales = "admin@app.activiti.com:admin";
+                    String codificado = "Basic "+ Base64.getEncoder().encodeToString(credenciales.getBytes());
+                    // Agrega el encabezado personalizado
+                    mutableRequest.putHeader("Authorization", codificado);
+                    logger.info("Encabezado 'Authorization' agregado a la solicitud : " + codificado);
+                }
+                chain.doFilter(mutableRequest, response);
+            }
+        }
+    }
+    ```
+
+
+Consultamos el siguiente A traves del postman, navegador etc.
+```cmd
+http://localhost:9090/activiti-app/api/enterprise/secure-data
 ```
