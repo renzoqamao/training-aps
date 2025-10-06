@@ -5,7 +5,7 @@
 - [Java Development Kit (JDK) - Version 17](https://www.oracle.com/java/technologies/javase/jdk17-archive-downloads.html)
 - [Maven - Version 3.8.8](https://maven.apache.org/download.cgi)
 - [Docker - Latest stable version](https://docs.docker.com/desktop/setup/install/windows-install/) 
-- [Un ambiente de Alfresco Process Service](http://52.5.154.124/gitlab/domain/aps/aps-docker-deployment)
+- Un ambiente de Alfresco Process Service
 
 
 # Temas
