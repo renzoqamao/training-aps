@@ -170,3 +170,54 @@ formRendered:function(form, scope) {
     form.values['fechaSolicitud'] = today; // Reemplaza con el ID del campo de fecha.
 }
 ```
+
+## Extensiones de interfaz de usuario
+
+
+
+> **Nota:** La información a continuación se aplica a la extensión de la interfaz de usuario de AngularJS disponible en APS. El **Alfresco Application Development Framework** y el **Process Workspace**, introducidos en APS 1.8, son ahora el mecanismo preferido para extender la interfaz de usuario de **Alfresco Process Services**.
+
+### Guía General
+
+- Comienza cada personalización simplemente usando `console.log` en el evento apropiado para registrar los detalles de lo que está disponible; se puede determinar una gran cantidad de información de esta manera:
+
+    ```javascript
+    console.log(scope.$root);
+    console.log(scope);
+    console.log(form);
+    console.log(field);
+    ```
+
+- Registrar la variable ``Scope`` en la consola proporciona información sobre los objetos y funciones que se pueden usar en la extensión, por ejemplo, la función ``saveForm``, que podría usarse para guardar automáticamente el formulario en puntos clave.
+
+- Registrar la variable ``Form`` en la consola proporciona información sobre el Proceso, Formulario y Variables disponibles.
+
+
+### Recomendaciones
+
+- Habilita las Herramientas para Desarrolladores de Chrome para ver la consola y otras herramientas útiles para depurar el proceso y las extensiones de la interfaz de usuario.
+
+- Desarrolla extensiones de formularios realizando cambios en render-form-extensions.js en primera instancia; es mucho más fácil realizar cambios y depurar utilizando este enfoque en lugar de agregar la personalización a través de la pestaña JavaScript en el App Designer.
+
+### Funciones Útiles
+
+- Buscar un Campo en el Formulario
+    ```javascript
+    var theField = scope.findFormFieldWithId(scope, "fieldID");
+    ```
+
+- Mostrar un Mensaje de Error
+    ```javascript
+    scope.$root.addAlert('Texto de alerta', 'error');
+    scope.$root.addAlert('Texto de alerta', 'info');
+    ```
+
+### Tabla dinamica
+
+La Tabla Dinámica ha sido implementada utilizando UI Grid, disponible en: http://ui-grid.info/. En este sitio web se puede encontrar más información sobre los métodos y hooks disponibles.
+
+
+
+
+
+
