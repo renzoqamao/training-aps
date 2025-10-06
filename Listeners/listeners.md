@@ -310,7 +310,7 @@ public class MyRuntimeListener implements RuntimeEventListener{
 ```
 
 
-**Nota**:
+> **Nota**:
 - Clase:  implementación Java que define la lógica personalizada que se ejecutará en un punto específico del proceso.
 - Expresión Delegada : Una Expresión Delegada es una forma de definir la lógica de ejecución utilizando expresiones que se resuelven en tiempo de ejecución. Estas expresiones suelen utilizar el lenguaje de expresiones de Java Unified Expression Language (UEL) y permiten una mayor flexibilidad al referenciar beans de Spring o métodos específicos sin necesidad de codificar una clase completa.
 - Expresión: Una Expresión en APS es una construcción que se evalúa en tiempo de ejecución y puede devolver un valor. Las expresiones se utilizan en diversas partes del proceso, como en condiciones de flujo, asignaciones de tareas o para definir valores de variables. Al igual que las expresiones delegadas, suelen basarse en UEL y pueden acceder a variables del proceso, beans de Spring y otros componentes del contexto de ejecución.

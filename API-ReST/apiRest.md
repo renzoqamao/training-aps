@@ -10,7 +10,7 @@ Las soluciones que utilizan las API REST de Process Services pueden estar en un 
 Para habilitar el uso compartido de recursos de origen cruzado (CORS) en los servicios del proceso, configure la propiedad ``cors.enabled`` como true (verdadera) en el archivo ``activiti-app.properties``.
 
 
-> **nota**: Esta función solo es compatible con el servidor de aplicaciones tomcat.
+> **Nota**: Esta función solo es compatible con el servidor de aplicaciones tomcat.
 
 ### Configuración de CORS
 

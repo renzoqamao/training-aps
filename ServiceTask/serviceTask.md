@@ -165,7 +165,7 @@ ${myBean.myProperty}
 
 invoca un método con o sin parámetros
 
-Nota: Al invocar un método con parámetros, agregue paréntesis vacíos () después del nombre del método
+> **Nota**: Al invocar un método con parámetros, agregue paréntesis vacíos () después del nombre del método
 Los parámetros pasados ​​pueden ser valores literales o expresiones
 
 ```
@@ -248,7 +248,7 @@ groovy
 juel
 ```
 
-Nota: La configuración de la lista blanca afecta a cualquier tipo de ejecución de scripts, ya sea que se trate de tareas de scripts o cualquier otra situación en la que se pueda usar un script. Tenga en cuenta también que esto se verifica en tiempo de ejecución. Si un lenguaje de scripts no está en la lista blanca, la tarea o actividad relacionada no se ejecutará.
+> **Nota**: La configuración de la lista blanca afecta a cualquier tipo de ejecución de scripts, ya sea que se trate de tareas de scripts o cualquier otra situación en la que se pueda usar un script. Tenga en cuenta también que esto se verifica en tiempo de ejecución. Si un lenguaje de scripts no está en la lista blanca, la tarea o actividad relacionada no se ejecutará.
 
 
 ## Lista blanca de clases en JavaScript
@@ -269,4 +269,4 @@ javascript.secure-scripting.enabled=true
     java.util.ArrayList
     org.apache.tomcat.util.log.SystemLogHandler
     ```
-Nota: La habilitación de scripts seguros para clases de Java utilizadas en JavaScript se activa cuando la configuración falta en el archivo de propiedades o está comentada.
+> **Nota**: La habilitación de scripts seguros para clases de Java utilizadas en JavaScript se activa cuando la configuración falta en el archivo de propiedades o está comentada.

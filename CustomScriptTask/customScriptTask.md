@@ -81,7 +81,7 @@ Agregue los siguientes elementos BPMN al nuevo proceso y conéctelos de la sigui
 
     ![javascript](./img/javascriptST.png)
 
-    **Nota**: La creación de esta variable permite utilizar la información más adelante en el proceso para completar un campo en un formulario de estado. El valor no estaría disponible en el menú desplegable necesario sin esta tarea.
+    >**Nota**: La creación de esta variable permite utilizar la información más adelante en el proceso para completar un campo en un formulario de estado. El valor no estaría disponible en el menú desplegable necesario sin esta tarea.
 
 
     - Haga clic en la propiedad Script para abrir el editor de scripts y agregar el siguiente script (explicado a continuación):
@@ -97,7 +97,7 @@ Agregue los siguientes elementos BPMN al nuevo proceso y conéctelos de la sigui
         execution.setVariable('message',message + ": created in JavaScript")
         ```
     
-    **Nota**: A continuación se explica cada línea del script (la tarea Groovy tiene los mismos pasos, pero se utiliza el lenguaje Groovy):
+    > **Nota**: A continuación se explica cada línea del script (la tarea Groovy tiene los mismos pasos, pero se utiliza el lenguaje Groovy):
 
         - Cree una variable ``message`` y complétela con el valor del formulario de inicio.
         - Cree una variable llamada ``user`` y complétela con el valor del bean Spring User Info que se proporciona OOTB con APS
@@ -120,7 +120,7 @@ Agregue los siguientes elementos BPMN al nuevo proceso y conéctelos de la sigui
 
     ![groovy](./img/groovyST.png)
 
-    **Nota**: La creación de esta variable permite utilizar la información más adelante en el proceso para completar un campo en un formulario de estado. El valor no estaría disponible en el menú desplegable necesario sin esta tarea.
+    > **Nota**: La creación de esta variable permite utilizar la información más adelante en el proceso para completar un campo en un formulario de estado. El valor no estaría disponible en el menú desplegable necesario sin esta tarea.
 
 
     - Haga clic en la propiedad ``Script`` para abrir el editor de scripts y agregar el siguiente script (explicado a continuación):
@@ -136,7 +136,7 @@ Agregue los siguientes elementos BPMN al nuevo proceso y conéctelos de la sigui
         execution.setVariable('message',message + ": created in groovy")
         ```
     
-    **Nota**: A continuación se explica cada línea del script (la tarea Javascript tiene los mismos pasos, pero se utiliza el lenguaje Groovy):
+    > **Nota**: A continuación se explica cada línea del script (la tarea Javascript tiene los mismos pasos, pero se utiliza el lenguaje Groovy):
 
         - Cree una variable ``message`` y complétela con el valor del formulario de inicio.
         - Cree una variable llamada ``user`` y complétela con el valor del bean Spring User Info que se proporciona OOTB con APS
@@ -160,7 +160,7 @@ Agregue los siguientes elementos BPMN al nuevo proceso y conéctelos de la sigui
         ---
         ${message}
 
-    **Nota**: La sintaxis ${variable} se utiliza para generar el valor de una variable de proceso en el formulario.
+    > **Nota**: La sintaxis ${variable} se utiliza para generar el valor de una variable de proceso en el formulario.
 
     - Guarde y cierre el formulario.
     - Valide y luego guarde su nuevo proceso antes de regresar al Diseñador de aplicaciones.

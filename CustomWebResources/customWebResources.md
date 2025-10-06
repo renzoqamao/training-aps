@@ -27,7 +27,7 @@ El objeto **ACTIVITI.CONFIG.resources** permite cargar distintos archivos para c
 
 Por ejemplo, si un usuario ingresa a la aplicación de **editor** , con la configuración anterior implementada, **custom/style.css** sería el único recurso personalizado que se cargaría. Si un usuario ingresara a la aplicación de **workflow** , **custom/javascript.js** sería el único recurso personalizado que se cargaría. Por lo tanto, si el **workflow** también desea cargar custom/style.css , este deberá especificarse nuevamente dentro de la lista de recursos de **workflow**.
 
-**Nota**: Recuerde modificar el parámetro **v** cuando haya realizado cambios en sus archivos para evitar que el navegador utilice una versión en caché de su lógica personalizada.
+> **Nota**: Recuerde modificar el parámetro **v** cuando haya realizado cambios en sus archivos para evitar que el navegador utilice una versión en caché de su lógica personalizada.
 
 
 # Ejemplo
