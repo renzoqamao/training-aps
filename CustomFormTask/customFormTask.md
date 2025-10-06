@@ -125,6 +125,16 @@ ALFRESCO.formExtensions = {
     }
 };
 ```
+> nota: Toda la información y renderización se hace en `/usr/local/tomcat/webapps/activiti-app/workflow/index.html`, para actualizar hay que cambiar la version `v=4` `<script src="extensions/render-form-extensions.js?v=4"></script>` o borrar la cache del tomcat.
+
+## Parámetros
+
+Los siguientes parámetros están disponibles en los métodos utilizados por las extensiones de formulario:
+
+- Field  : el campo de formulario que activó el evento
+- Form : el formulario que desencadenó el evento
+- Outcome : el resultado seleccionado por el usuario al completar el formulario
+- Scope  : el objeto $scope de Angular
 
 ## Ejemplos
 
@@ -136,21 +146,38 @@ para realizar los ejemplos es necesario crear un formulario y en la opción **ja
 
 ```javascript
 formRendered:function(form, scope) {
-    var currentUser = scope.$root.account;
-    console.log(currentUser);
-}
+            console.log("scope:")
+            console.log( scope);
+            console.log("scope.$root:")
+            console.log( scope.$root);
+            var currentUser = scope.$root.account;
+            console.log(currentUser);
+        }
 ```
 
 ### 2. Bloque a un campo si otro campo ha sido seleccionado
 
 ```javascript
 formFieldValueChanged:function(form, field, scope) {
-    if (field.id === 'tipoSolicitud' && field.value === 'Urgente') { // Reemplaza con el ID del campo a monitorear.
-        form.fields['comentario'].readOnly = true; // Reemplaza con el ID del campo a bloquear.
-    } else {
-        form.fields['comentario'].readOnly = false;
-    }
-}
+            console.log("scope:")
+            console.log( scope);
+            console.log("form : " )
+            console.log(scope);
+             // Acceder al contenedor de campos
+            const containerFields = form.fields[0].fields["1"]; 
+
+            // Buscar el campo 'comentarios' dentro del contenedor
+            var comentariosField =  angular.element(document.getElementById("activiti-comentarios"));; 
+
+            console.log("Campo comentarios:")
+            console.log(comentariosField);
+
+            if (field.id === "tiposolicitud" && field.value === "Urgente") {
+                console.log("bloquea");
+                comentariosField.attr("readOnly",true);  // Bloquea el campo
+
+            }
+        }
 ```
 
 ### 3. Solicite una confirmación
@@ -166,8 +193,11 @@ formBeforeComplete:function(form, outcome, scope) {
 
 ```javascript
 formRendered:function(form, scope) {
+    console.log(form.fields[0].fields[1].find(function(x) { return x.id === "fechasolicitud"; }));
     var today = new Date().toISOString().split('T')[0]; // Formato YYYY-MM-DD.
-    form.values['fechaSolicitud'] = today; // Reemplaza con el ID del campo de fecha.
+    // Buscar el campo 'fechasolicitud' en el array de campos
+    var campoFecha = form.fields[0].fields[1].find(function(x) { return x.id === "fechasolicitud"; });
+    campoFecha.value=today; // Reemplaza con el ID del campo de fecha.
 }
 ```
 
