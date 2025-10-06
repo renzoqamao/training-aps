@@ -448,7 +448,7 @@ Añadir al pom.xml
     import org.springframework.security.core.Authentication;
 
     @RestController
-    @RequestMapping("/enterprise")
+    @RequestMapping("/enterprise/public")
     public class PublicController {
 
         @GetMapping("/secure-data")
@@ -517,65 +517,82 @@ Añadir al pom.xml
     }
     ```
 
-3. Creación de Extensión de la seguridad del API ReST
+3. Creación del filtro
     ```java
     package com.activiti.extension.conf;
-    import org.springframework.context.annotation.Configuration;
-    import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-    import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-    import org.springframework.web.filter.OncePerRequestFilter;
 
-    import com.activiti.api.security.AlfrescoApiSecurityExtender;
-
-    import org.springframework.security.core.Authentication;
-    import org.springframework.security.core.authority.SimpleGrantedAuthority;
-    import org.springframework.security.core.context.SecurityContextHolder;
-    import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
     import jakarta.servlet.FilterChain;
     import jakarta.servlet.ServletException;
     import jakarta.servlet.http.HttpServletRequest;
     import jakarta.servlet.http.HttpServletResponse;
+    import org.springframework.beans.factory.annotation.Value;
+    import org.springframework.stereotype.Component;
+    import org.springframework.web.filter.OncePerRequestFilter;
+
     import java.io.IOException;
     import java.util.Base64;
-    import java.util.Collections;
-    import java.util.List;
 
-    import org.slf4j.Logger;
-    import org.slf4j.LoggerFactory;
-    @Configuration
-    public class SecureDataApiSecurityOverride implements AlfrescoApiSecurityExtender  {
-
-        protected static final Logger logger = LoggerFactory.getLogger(SecureDataApiSecurityOverride.class);
+    @Component
+    public class AdminAuthenticationFilter extends OncePerRequestFilter {
+        @Value("${admin.username}")
+        private String username;
+        @Value("${admin.password}")
+        private String password;
 
         @Override
-        public void configure(HttpSecurity httpSecurity) throws Exception {
-            httpSecurity
-                .addFilterBefore(new AdminAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
-        }
+        protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain) throws IOException, ServletException {
 
-        private static class AdminAuthenticationFilter extends OncePerRequestFilter {
-            
-            @Override
-            protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
-                    throws IOException, ServletException {
-                logger.info("URI :"  + request.getRequestURI() );
-                MutableHttpServletRequest mutableRequest = new MutableHttpServletRequest(request);
-                if ("/activiti-app/api/enterprise/secure-data".equals(request.getRequestURI())) {
-                    // Autenticar como usuario 'admin'
-                    logger.info("URI IN IF :"  + request.getRequestURI() );
-                    // Envuelve la solicitud original
-                    String credenciales = "admin@app.activiti.com:admin";
-                    String codificado = "Basic "+ Base64.getEncoder().encodeToString(credenciales.getBytes());
-                    // Agrega el encabezado personalizado
-                    mutableRequest.putHeader("Authorization", codificado);
-                    logger.info("Encabezado 'Authorization' agregado a la solicitud : " + codificado);
-                }
-                chain.doFilter(mutableRequest, response);
+            logger.info("URI :" + request.getRequestURI());
+
+            MutableHttpServletRequest mutableRequest = new MutableHttpServletRequest(request);
+
+            if (request.getRequestURI().contains("/public/")) {
+                // Autenticar como usuario invitado
+                logger.info("URI Public :" + request.getRequestURI());
+                // Envuelve la solicitud original
+                String credenciales = username + ":" + password;
+                logger.info("credenciales : " + credenciales);
+                String codificado = "Basic " + Base64.getEncoder().encodeToString(credenciales.getBytes());
+                // Agrega el encabezado personalizado
+                mutableRequest.putHeader("Authorization", codificado);
+                logger.info("Encabezado 'Authorization' agregado a la solicitud : " + codificado);
             }
+            chain.doFilter(mutableRequest, response);
         }
     }
     ```
 
+4. Creación de Extensión de la seguridad del API ReST
+    ```java
+    package com.activiti.extension.conf;
+
+    import com.activiti.api.security.AlfrescoApiSecurityExtender;
+    import org.springframework.beans.factory.annotation.Autowired;
+    import org.springframework.context.annotation.Configuration;
+    import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+    import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+
+    @Configuration
+    public class PublicAdminSecurityExtender implements AlfrescoApiSecurityExtender {
+
+        private final AdminAuthenticationFilter adminAuthenticationFilter;
+
+        @Autowired
+        public PublicAdminSecurityExtender(AdminAuthenticationFilter adminAuthenticationFilter) {
+            this.adminAuthenticationFilter = adminAuthenticationFilter;
+        }
+
+        @Override
+        public void configure(HttpSecurity httpSecurity) throws Exception {
+            httpSecurity.addFilterBefore(adminAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+        }
+    }
+    ```
+5. Agregar las siguientes propiedades a activiti-app.properties
+    ```properties
+    admin.username=admin@app.activiti.com
+    admin.password=admin
+    ```
 
 Consultamos el siguiente A traves del postman, navegador etc.
 ```cmd
