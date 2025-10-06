@@ -55,7 +55,7 @@ Se utilizaré la biblioteca Epoch, descarga los siguiente archivos desde su siti
 en **Plantilla de editor de formulario**
 
 ```html
-<img src="https://img.freepik.com/free-vector/3d-pie-chart-3_78370-628.jpg?t=st=1738548774~exp=1738552374~hmac=0a263e85898ff599780f88de6e2003358a8efdf81a10a65658eea46a030469f2&w=740"></img>
+<img src="https://avatars.githubusercontent.com/u/2317879?s=280&amp;v=4" />
 ```
 
 
@@ -81,7 +81,78 @@ en **Plantilla de tiempo de ejecución de formulario**
 <div class="clearfix"></div>
 
 ```
+Este fragmento de código combina HTML, AngularJS y la librería Epoch para mostrar y actualizar dinámicamente un gráfico de pastel (pie chart) basado en una lista de elementos. A continuación se explica cada parte:
 
+---
+
+### 1. Inclusión del CSS de Epoch
+
+```html
+<link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/epoch/0.6.0/epoch.min.css">
+```
+
+- Se carga el archivo CSS de la versión 0.6.0 de Epoch desde un CDN (cdnjs). Esto es necesario para aplicar el estilo y la apariencia del gráfico generado por Epoch.
+
+---
+
+### 2. Controlador AngularJS y edición de elementos
+
+```html
+<div ng-controller="MyController" style="float:left;margin: 35px 20px 0 0;">
+    <div ng-repeat="item in items">
+          <input type="text" ng-model="item.label" style="width:200px; margin: 0 10px 10px 0;" ng-change="refreshChart()">
+          <input type="number" ng-model="item.value" style="width: 80px; margin-bottom: 10px;" ng-change="refreshChart()">
+    </div>
+
+    <div>
+        <button class="btn btn-default btn-sm" ng-click="addItem()" ng-disabled="isDisabled">
+           Add item
+        </button>
+    </div>
+</div>
+```
+
+- **ng-controller="MyController"**: Asigna el controlador `MyController` a este bloque de HTML. Este controlador gestiona la lógica de los datos y el gráfico.
+- **ng-repeat="item in items"**: Itera sobre el arreglo `items` (definido en el controlador), generando una sección para cada elemento.
+  - **input type="text"**: Permite editar la propiedad `label` de cada elemento. Al cambiar su valor, se llama a la función `refreshChart()`, que actualiza el gráfico.
+  - **input type="number"**: Permite editar la propiedad `value` de cada elemento. También llama a `refreshChart()` al modificar su valor.
+- **Botón "Add item"**:  
+  - Al hacer clic, se invoca la función `addItem()` definida en el controlador, lo que añade un nuevo elemento al arreglo.
+  - El atributo **ng-disabled="isDisabled"** desactiva el botón cuando la variable `isDisabled` es `true`.
+
+---
+
+### 3. Contenedor del gráfico de pastel
+
+```html
+<div class="epoch category10" ng-class="'activiti-chart-' + field.id" style="display:inline-block;width: 200px; height: 200px;"></div>
+```
+
+- **class="epoch category10"**: Estas clases son utilizadas por la librería Epoch para determinar el estilo y la categoría de colores (en este caso, "category10" es una paleta de 10 colores).
+- **ng-class="'activiti-chart-' + field.id"**: Utiliza AngularJS para asignar dinámicamente una clase al contenedor. Se concatena la cadena `'activiti-chart-'` con el valor de `field.id` (definido en el scope), lo que permite identificar de forma única este gráfico dentro del DOM.
+- **Estilos inline**: Se definen el ancho y alto del contenedor (200px por 200px), lo que establece el tamaño del gráfico.
+
+---
+
+### 4. Limpieza de floats
+
+```html
+<div class="clearfix"></div>
+```
+
+- La clase **clearfix** se utiliza para limpiar los floats, asegurando que los elementos flotantes anteriores (como el div del controlador que tiene `float:left`) no afecten la disposición de los elementos posteriores en la página.
+
+---
+
+### Resumen
+
+- **CSS de Epoch**: Se carga para dar estilo al gráfico.
+- **Bloque con `ng-controller`**: Permite la edición dinámica de un arreglo de elementos (cada uno con una etiqueta y un valor) que se mostrarán en el gráfico.
+- **ng-repeat**: Genera inputs para cada elemento en el arreglo, permitiendo actualizar el gráfico en tiempo real mediante la función `refreshChart()`.
+- **Botón "Add item"**: Permite agregar nuevos elementos, mientras que su estado se controla con `ng-disabled`.
+- **Contenedor del gráfico**: Se identifica mediante clases estáticas y dinámicas y se define su tamaño, permitiendo a la librería Epoch renderizar el gráfico de pastel con los datos proporcionados.
+
+Esta integración entre AngularJS y Epoch permite que, al modificar los valores o agregar nuevos elementos, el gráfico se actualice automáticamente para reflejar los cambios en los datos.
 
 Definir el controlador para este campo de formulario. El controlador es un controlador **AngularJs** que realiza principalmente tres funciones:
 
@@ -183,8 +254,154 @@ angular.module('activitiApp')
         };
 
 }]);
-
 ```
+El siguiente código define un controlador AngularJS dentro del módulo `activitiApp`. A continuación se explica cada parte en detalle:
+
+---
+
+### 1. Definición del controlador y dependencias
+
+```javascript
+angular.module('activitiApp')
+    .controller('MyController', ['$rootScope', '$scope', function ($rootScope, $scope) {
+```
+
+- **angular.module('activitiApp')**: Se utiliza para acceder al módulo de la aplicación.
+- **.controller('MyController', [...])**: Se declara un controlador llamado `MyController` inyectando las dependencias `$rootScope` y `$scope`.
+- **console.log('MyController instantiated');**: Se imprime un mensaje en la consola para confirmar que el controlador se ha creado.
+
+---
+
+### 2. Inicialización de variables
+
+```javascript
+$scope.items = [];
+var pieChart;
+```
+
+- **$scope.items = []**: Se inicializa un arreglo vacío que almacenará los elementos (por ejemplo, datos para un gráfico de pastel).
+- **var pieChart;**: Variable para almacenar la instancia del gráfico de pastel que se crea usando una librería externa (Epoch), la cual no está integrada con AngularJS.
+
+---
+
+### 3. Función para limpiar los datos
+
+```javascript
+var cleanItems = function(items) {
+    var cleanedItems = [];
+    items.forEach(function(item) {
+       cleanedItems.push({ label: item.label, value: item.value });
+    });
+    return cleanedItems;
+};
+```
+
+- **cleanItems**: Es una función que recibe un arreglo de elementos y devuelve un nuevo arreglo que contiene únicamente las propiedades `label` y `value` de cada elemento.  
+- Esto es útil para eliminar propiedades internas que AngularJS añade (como `$$hashKey`) y que no se desean enviar a la librería del gráfico.
+
+---
+
+### 4. Función para agregar un ítem
+
+```javascript
+$scope.addItem = function() {
+    // Actualiza el modelo agregando un nuevo ítem
+    $scope.items.push({ label: 'label ' + ($scope.items.length + 1), value: 0 });
+
+    // Actualiza los datos para el gráfico de pastel
+    if (pieChart === undefined) {
+        pieChart = jQuery('.activiti-chart-' + $scope.field.id).epoch({
+            type: 'pie',
+            data: cleanItems($scope.items)
+        });
+        console.log('PieChart created');
+    } else {
+        $scope.refreshChart();
+    }
+};
+```
+
+- **$scope.addItem**: Función que se invoca cuando se pulsa un botón (por ejemplo, para agregar un nuevo dato al gráfico).  
+- Se añade un nuevo elemento al arreglo `$scope.items` con un label dinámico y valor inicial 0.
+- Si `pieChart` aún no se ha creado, se instancia utilizando la librería **Epoch** sobre un elemento HTML cuyo selector se construye con la clase `activiti-chart-` concatenado con el id del campo (`$scope.field.id`).  
+- Si el gráfico ya existe, se llama a la función `refreshChart` para actualizarlo.
+
+---
+
+### 5. Función para refrescar el gráfico
+
+```javascript
+$scope.refreshChart = function() {
+    pieChart.update(cleanItems($scope.items));
+    console.log('PieChart updated');
+};
+```
+
+- **$scope.refreshChart**: Se encarga de actualizar el gráfico de pastel con los datos limpios obtenidos a partir de `$scope.items`.
+
+---
+
+### 6. Registro y desregistro del controlador como listener
+
+```javascript
+$scope.registerCustomFieldListener(this);
+$scope.$on("$destroy", function handleDestroyEvent() {
+    console.log("destroy event");
+    $scope.removeCustomFieldListener(this);
+});
+```
+
+- **$scope.registerCustomFieldListener(this);**: Registra el controlador como listener para eventos personalizados en el formulario.  
+- **$scope.$on("$destroy", ...)**: Cuando el scope se destruye (por ejemplo, al salir de la vista), se ejecuta esta función que elimina el listener registrado, evitando posibles pérdidas de memoria o comportamientos inesperados.
+
+---
+
+### 7. Métodos para manipular el comportamiento del formulario
+
+#### a. Antes de completar el formulario
+
+```javascript
+this.formBeforeComplete = function(form, outcome, scope) {
+    console.log('Before form complete');
+    $scope.field.value = JSON.stringify(cleanItems($scope.items));
+};
+```
+
+- **formBeforeComplete**: Este método se invoca justo antes de que se complete la tarea/formulario.
+- Convierte el arreglo limpio de ítems a una cadena JSON y lo asigna a `$scope.field.value`, de modo que se almacene correctamente el valor en el formulario.
+
+#### b. Cuando el formulario se ha renderizado
+
+```javascript
+this.formRendered = function(form, scope) {
+    console.log(form);
+    form.fields.forEach(function(field) {
+        if (field.type === 'readonly'
+              && $scope.field.id == field.id
+              && field.value
+              && field.value.length > 0) {
+
+            $scope.items = JSON.parse(field.value);
+            $scope.isDisabled = true;
+
+            pieChart = jQuery('.activiti-chart-' + $scope.field.id).epoch({
+                type: 'pie',
+                data: cleanItems($scope.items)
+            });
+        }
+    });
+};
+```
+
+- **formRendered**: Se ejecuta cuando el formulario ya se ha renderizado.
+- Itera sobre cada campo del formulario (`form.fields`) y, si encuentra un campo de solo lectura que coincide con el id del campo en el scope y que tiene un valor, se parsea ese valor (asumiendo que es JSON) para asignarlo a `$scope.items`.  
+- Además, establece `$scope.isDisabled = true` para deshabilitar el campo (esto podría usarse en la vista con `ng-disabled`), y vuelve a crear el gráfico de pastel utilizando los datos actualizados.
+
+---
+
+### Resumen
+
+Este controlador se encarga de gestionar una lista de ítems que se muestran en un gráfico de pastel (utilizando la librería Epoch). Permite agregar nuevos ítems, actualizar el gráfico y sincronizar los datos del modelo con el formulario antes de completarlo. Además, se registra como listener para recibir eventos del formulario y se asegura de limpiar y actualizar los datos adecuadamente cuando se renderiza o se destruye el scope.
 
 Los campos de Propiedad y tipo de valor de campo es para agregar un nuevo par de clave:valor a customFieldsValueInfo.FieldName (ex customFieldsValueInfo.grafico )
 
@@ -244,6 +461,8 @@ angular
         ALFRESCO.formExtensions.formBeforeComplete =
             function(form, outcome, scope){
                 console.log('Before form complete');
+                console.log('$scope');
+                console.log($scope.field); // hace referencia al field donde se definio el controlador.
                 $scope.field.value = $scope.data.selectedMonth
             };
     }]
