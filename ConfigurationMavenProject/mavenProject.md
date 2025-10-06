@@ -211,6 +211,13 @@
 				</exclusion>
 			</exclusions>
 		</dependency>
+		<dependency>
+				<groupId>org.springframework.boot</groupId>
+				<artifactId>spring-boot-dependencies</artifactId>
+				<version>${spring-boot.version}</version>
+				<type>pom</type>
+				<scope>import</scope>
+		</dependency>
   </dependencies>
 ```
 12. Especifique los complementos utilizados en la sección de compilación que Maven necesita para compilar el proyecto.
