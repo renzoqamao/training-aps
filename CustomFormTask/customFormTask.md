@@ -142,6 +142,8 @@ para realizar los ejemplos es necesario crear un formulario y en la opción **ja
 
 ![ejemplos](./images/examples.png)
 
+![campo](./images/field.png)
+
 ### 1. para obtener el usuario actual:
 
 ```javascript
@@ -157,6 +159,8 @@ formRendered:function(form, scope) {
             
         }
 ```
+
+## Ejercicios
 
 ### 2. Bloque a un campo si otro campo ha sido seleccionado
 
