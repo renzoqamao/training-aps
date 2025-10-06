@@ -50,3 +50,4 @@
 - [roadmap domain aps](https://docs.google.com/spreadsheets/d/11zgz-9BtAxeCg2tJ4pik7q9bFpFJHQgGRRHJbDzdUhs/edit?gid=0#gid=0)
 - [aps sdk](https://github.com/OpenPj/alfresco-process-services-project-sdk/tree/master)
 - [business data integration made easy with data models](https://connect.hyland.com/t5/alfresco-blog/business-data-integration-made-easy-with-data-models/ba-p/135150)
+- [Desarrollo eficiente de plantillas para Alfresco Process Services](https://connect.hyland.com/t5/alfresco-archive/efficient-stencil-development-for-alfresco-process-services/td-p/152123)
