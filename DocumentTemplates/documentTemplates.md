@@ -70,10 +70,27 @@ Al utilizar la tarea Generar documento , asegúrese de utilizar la sintaxis corr
 Select <<[Options_LABEL]>> with an ID <<[Options_ID]>>
 ```
 
-### Bucle
+### Bonus
 
-```
-<<foreach[in List] >>
+```java
+package com.activiti.extension.bean;
 
-<</foreach>>
+import org.activiti.engine.delegate.DelegateExecution;
+import org.springframework.stereotype.Component;
+
+import com.activiti.api.docgen.TemplateVariableProcessor;
+import com.activiti.domain.runtime.RuntimeDocumentTemplate;
+
+@Component
+public class MyTemplateVariableProcessor implements TemplateVariableProcessor {
+    
+    public Object process(RuntimeDocumentTemplate runtimeDocumentTemplate, DelegateExecution execution, String variableName, Object value) {
+            
+        if (!"datos".equals(variableName)) return value.toString();
+        
+        return value.toString() + "___" + "HELLO_WORLD";
+        
+    }
+}
 ```
+> Nota:variables.get("myVariable") Sólo se pasarán a la TemplateVariableProcessorimplementación las variables con el formato de la plantilla .docx.
