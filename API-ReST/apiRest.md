@@ -756,7 +756,7 @@ Por ejemplo, la obtención de definiciones de procesos se describe como un HTTP 
 > **Nota**: Puede controlar el acceso a la API de Engine mediante la capacidad “Acceder a la API REST de Activiti” (Administración de identidades > Capacidades). Esto coincide con la API de Activiti Engine (Java), que es independiente de los permisos de usuario. Esto significa que al llamar a cualquiera de las operaciones, el identificador del inquilino siempre debe proporcionarse en la URL, incluso si el sistema no tiene multitenencia (siempre habrá un inquilino en ese caso): por ejemplo, ``<your-server-and-context-root>/api/repository/process-definitions?tenantId=tenant_1``.
 
 
-### Historic processes and tasks
+## Historic processes and tasks
 
 En esta sección se incluyen ejemplos para consultar instancias de procesos y tareas históricas en la API de Process Services. Puede consultar instancias de procesos y tareas históricas para obtener información sobre instancias de procesos o tareas pasadas y en curso.
 
