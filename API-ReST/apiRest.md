@@ -741,7 +741,7 @@ Ejemplo de respuesta:
 
 ## Process Engine ReST API
 
-La API REST de Process Engine es un equivalente compatible de la API de código abierto de Activiti. Esto significa que todas las operaciones descritas en la Guía del usuario de Activiti están disponibles tal como se documentan allí, excepto los puntos finales REST que no son relevantes para el producto empresarial (por ejemplo, formularios, ya que se implementan de manera diferente).
+La API REST de Process Engine es un equivalente compatible de la API de código abierto de [Activiti](https://www.activiti.org/userguide/#_rest_api). Esto significa que todas las operaciones descritas en la Guía del usuario de Activiti están disponibles tal como se documentan allí, excepto los puntos finales REST que no son relevantes para el producto empresarial (por ejemplo, formularios, ya que se implementan de manera diferente). 
 
 Esta API REST está disponible en
 ```
