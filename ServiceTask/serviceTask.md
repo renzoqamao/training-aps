@@ -137,6 +137,12 @@ HistoryService historyService = processEngine.getHistoryService();
 FormService formService = processEngine.getFormService();
 ```
 
+Ahora:
+```java
+import org.activiti.engine.impl.context.Context;
+Context.getProcessEngineConfiguration().getRuntimeService();
+```
+
 ![process engine configuration](./img/processEngineConfiguration.png)
 
 
