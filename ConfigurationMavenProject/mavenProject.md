@@ -369,3 +369,23 @@ mvn clean compile assembly:single
 	```
 		http://localhost:8080/activiti-app
 	```
+
+## Activar los logs
+
+/opt/alfresco/alfresco-process-services/tomcat/webapps/activiti-app/WEB-INF/classes/log4j2.properties
+
+```properties
+logger.audit.name=com.activiti.extension.bean.CustomAudit
+logger.audit.level=debug
+
+logger.auditutils.name=com.activiti.extension.utils.AuditUtils
+logger.auditutils.level=debug
+
+
+logger.identityLink.name=org.activiti.engine.impl.persistence.entity.IdentityLinkEntityImpl
+logger.identityLink.level=debug
+
+logger.dbengine.name=org.activiti.engine.impl.db
+logger.dbengine.level=debug
+
+```
