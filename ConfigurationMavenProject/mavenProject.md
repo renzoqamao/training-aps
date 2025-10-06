@@ -222,8 +222,40 @@
 ```
 12. Especifique los complementos utilizados en la sección de compilación que Maven necesita para compilar el proyecto.
 
+Para Estandár: 
 ```xml
     <build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-shade-plugin</artifactId>
+				<version>3.4.0</version>
+				<executions>
+					<execution>
+						<phase>package</phase>
+						<goals>
+							<goal>shade</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>3.13.0</version>
+				<configuration>
+					<parameters>true</parameters>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
+```
+
+Pruebas:
+
+```xml
+<build>
+		 <finalName>demo</finalName> <!-- Nombre del JAR principal -->
 		<plugins>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
@@ -233,6 +265,9 @@
 					<descriptorRefs>
 						<descriptorRef>jar-with-dependencies</descriptorRef>
 					</descriptorRefs>
+					 <!-- Nombre personalizado para el JAR -->
+                <finalName>demo-${project.version}</finalName>
+                <appendAssemblyId>false</appendAssemblyId> <!-- Elimina el sufijo "jar-with-dependencies" -->
 				</configuration>
 				<executions>
 					<execution>
