@@ -251,6 +251,13 @@ Para Estandár:
 	</build>
 ```
 
+
+```bash
+mvn clean package
+```
+
+13. Especifique los complementos utilizados en la sección de compilación que Maven necesita para compilar el proyecto.
+
 Pruebas:
 
 ```xml
@@ -283,9 +290,8 @@ Pruebas:
 	</build>
 ```
 
-13. Probamos ejecutando el siguiente comando para compilar con las dependencias
-
 ```bash
+mvn clean package
 mvn clean compile assembly:single
 ```
 
