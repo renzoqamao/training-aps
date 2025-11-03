@@ -186,6 +186,7 @@ formFieldValueChanged:function(form, field, scope) {
             }
         }
 ```
+> Nota: el campo creado debe tener el id `comentarios`, en el DOM se le agregará el `activiti-`.
 
 ### 3. Solicite una confirmación
 
