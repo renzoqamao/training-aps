@@ -43,17 +43,16 @@ Para utilizarlo en APS debemos usar fully qualified classname en la sección de 
 
 Ejemplo:
 ```java
- package com.activiti.extension.bean;
+package com.activiti.extension.bean;
 
- import org.activiti.engine.impl.pvm.delegate.ActivityExecution;
- import org.springframework.sterotype.Component;
-
- @Component ("helloWorldBean")
- public   class   HelloWorldBean  {
-
-     public   void   sayHello (ActivityExecution execution) {
+import org.springframework.stereotype.Component;
+import org.activiti.engine.delegate.DelegateExecution;
+@Component("helloWorldBean")
+public class HelloWorldBean{
+    public void sayHello(DelegateExecution execution){
         System.out.println("Hello from " +  this );
-        execution.setVariable("var3","from the bean");
+        execution.setVariable("var3", "from the bean");
+
     }
 }
 ```
@@ -81,6 +80,27 @@ Utilizado para compartir dependencias entre los beans y configuración compleja 
 }
 ```
 
+```java
+package com.activiti.extension.conf;
+
+public class SomeBean {
+    private int value = 0; 
+
+        public SomeBean() {
+            // Default constructor
+        }
+
+        // Add getter and setter
+        public int getValue() {
+            return value;
+        }
+
+        public void setValue(int value) {
+            this.value = value;
+        }
+}
+
+```
 Este se puede inyectar en un bean que puede ser llamado en un service task
 
 ```java
@@ -102,8 +122,10 @@ public class HelloWorldBeanWithInjection {
     }
 }
 ```
+propiedad expresión:  ${helloWorldBeanWithInjection.sayHello()}
 
 
+[Proceso implementado](./processes/Task%20Services.bpmn20.xml)
 ### ProcessEngine API
 
 tiene las siguientes características:
