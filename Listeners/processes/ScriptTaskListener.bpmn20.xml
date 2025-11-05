@@ -1,0 +1,76 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<bpmn2:definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmn2="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:activiti="http://activiti.org/bpmn" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:omgdc="http://www.omg.org/spec/DD/20100524/DC" xmlns:omgdi="http://www.omg.org/spec/DD/20100524/DI" typeLanguage="http://www.w3.org/2001/XMLSchema" expressionLanguage="http://www.w3.org/1999/XPath" targetNamespace="http://www.activiti.org/processdef" xmlns:modeler="http://activiti.com/modeler" modeler:version="1.0en" modeler:exportDateTime="20251105184153063" modeler:modelId="201" modeler:modelVersion="13" modeler:modelLastUpdated="1762368107598">
+  <bpmn2:process id="ScriptTaskListener" name="ScriptTaskListener" isExecutable="true">
+    <extensionElements>
+      <modeler:deleteallvariables xmlns:modeler="http://activiti.com/modeler" modeler:deleteallvariables="false"/>
+    </extensionElements>
+    <bpmn2:startEvent id="startEvent1">
+      <extensionElements>
+        <modeler:editor-resource-id><![CDATA[startEvent1]]></modeler:editor-resource-id>
+      </extensionElements>
+      <bpmn2:outgoing>sid-2A83FD2E-1241-48B3-8E9A-D731B93D1598</bpmn2:outgoing>
+    </bpmn2:startEvent>
+    <bpmn2:userTask id="sid-B014316F-FDE9-4B87-B2FB-3421CFCD9059" name="tarea de ejemplo de usuario" activiti:assignee="$INITIATOR">
+      <extensionElements>
+        <activiti:taskListener event="create" class="org.activiti.engine.impl.bpmn.listener.ScriptTaskListener">
+          <activiti:field name="language">
+            <activiti:string><![CDATA[javascript]]></activiti:string>
+          </activiti:field>
+          <activiti:field name="script">
+            <activiti:string><![CDATA[print("Script Task Listener Event: " + task.eventName);]]></activiti:string>
+          </activiti:field>
+        </activiti:taskListener>
+        <activiti:taskListener event="assignment" class="org.activiti.engine.impl.bpmn.listener.ScriptTaskListener">
+          <activiti:field name="language">
+            <activiti:string><![CDATA[javascript]]></activiti:string>
+          </activiti:field>
+          <activiti:field name="script">
+            <activiti:string><![CDATA[print("Script Task Listener Event: " + task.eventName);]]></activiti:string>
+          </activiti:field>
+        </activiti:taskListener>
+        <modeler:allow-send-email><![CDATA[true]]></modeler:allow-send-email>
+        <modeler:activiti-idm-initiator><![CDATA[true]]></modeler:activiti-idm-initiator>
+        <modeler:editor-resource-id><![CDATA[sid-B014316F-FDE9-4B87-B2FB-3421CFCD9059]]></modeler:editor-resource-id>
+      </extensionElements>
+      <bpmn2:incoming>sid-2A83FD2E-1241-48B3-8E9A-D731B93D1598</bpmn2:incoming>
+      <bpmn2:outgoing>sid-2F1A5FC7-142D-4CB1-846E-98DB2A14AE51</bpmn2:outgoing>
+    </bpmn2:userTask>
+    <bpmn2:sequenceFlow id="sid-2A83FD2E-1241-48B3-8E9A-D731B93D1598" sourceRef="startEvent1" targetRef="sid-B014316F-FDE9-4B87-B2FB-3421CFCD9059">
+      <extensionElements>
+        <modeler:editor-resource-id><![CDATA[sid-2A83FD2E-1241-48B3-8E9A-D731B93D1598]]></modeler:editor-resource-id>
+      </extensionElements>
+    </bpmn2:sequenceFlow>
+    <bpmn2:endEvent id="sid-12AE73BE-61F9-45BD-B50F-3AD1929DEC16">
+      <extensionElements>
+        <modeler:editor-resource-id><![CDATA[sid-12AE73BE-61F9-45BD-B50F-3AD1929DEC16]]></modeler:editor-resource-id>
+      </extensionElements>
+      <bpmn2:incoming>sid-2F1A5FC7-142D-4CB1-846E-98DB2A14AE51</bpmn2:incoming>
+    </bpmn2:endEvent>
+    <bpmn2:sequenceFlow id="sid-2F1A5FC7-142D-4CB1-846E-98DB2A14AE51" sourceRef="sid-B014316F-FDE9-4B87-B2FB-3421CFCD9059" targetRef="sid-12AE73BE-61F9-45BD-B50F-3AD1929DEC16">
+      <extensionElements>
+        <modeler:editor-resource-id><![CDATA[sid-2F1A5FC7-142D-4CB1-846E-98DB2A14AE51]]></modeler:editor-resource-id>
+      </extensionElements>
+    </bpmn2:sequenceFlow>
+  </bpmn2:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_ScriptTaskListener">
+    <bpmndi:BPMNPlane bpmnElement="ScriptTaskListener" id="BPMNPlane_ScriptTaskListener">
+      <bpmndi:BPMNShape bpmnElement="startEvent1" id="BPMNShape_startEvent1">
+        <omgdc:Bounds height="30.0" width="30.0" x="90.0" y="150.0"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="sid-B014316F-FDE9-4B87-B2FB-3421CFCD9059" id="BPMNShape_sid-B014316F-FDE9-4B87-B2FB-3421CFCD9059">
+        <omgdc:Bounds height="80.0" width="100.0" x="165.0" y="125.0"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="sid-12AE73BE-61F9-45BD-B50F-3AD1929DEC16" id="BPMNShape_sid-12AE73BE-61F9-45BD-B50F-3AD1929DEC16">
+        <omgdc:Bounds height="28.0" width="28.0" x="310.0" y="151.0"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge bpmnElement="sid-2F1A5FC7-142D-4CB1-846E-98DB2A14AE51" id="BPMNEdge_sid-2F1A5FC7-142D-4CB1-846E-98DB2A14AE51">
+        <omgdi:waypoint x="265.0" y="165.0"/>
+        <omgdi:waypoint x="310.0" y="165.0"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="sid-2A83FD2E-1241-48B3-8E9A-D731B93D1598" id="BPMNEdge_sid-2A83FD2E-1241-48B3-8E9A-D731B93D1598">
+        <omgdi:waypoint x="120.0" y="165.0"/>
+        <omgdi:waypoint x="165.0" y="165.0"/>
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn2:definitions>

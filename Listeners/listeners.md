@@ -40,6 +40,7 @@ El executionListener va a estar definido en el evento de partida.
 package pe.com.domain.delegate;
 
 import org.activiti.engine.delegate.ExecutionListener;
+import org.activiti.bpmn.model.FlowElement;
 import org.activiti.engine.delegate.DelegateExecution;
 
 public class JavaExecutionListener implements ExecutionListener{
@@ -100,6 +101,7 @@ En el flujo de secuencia se define el evento ``take`` o ``Adquirir`` y utilizamo
 ```
 ${myExecutionListener.writeMessage(execution," Transition ")}
 ```
+[proceso implementado](./processes/ExecutionListeners.bpmn20.xml)
 
 ## Task Listeners
 
@@ -142,6 +144,8 @@ public class SpringTaskListener implements TaskListener{
 
 ![task Listener otros eventos](./img/taskListenerOtherEvents.png)
 
+[proceso implementado](./processes/taskListeners.bpmn20.xml)
+
 ## Otros Listeners
 
 Si bien la mayoría de los problemas pueden resolverse utilizando "execution listeners" o "task listeners", Alfresco Activiti admite otros tipos de listeners que cubren casos de uso más específicos.
@@ -163,10 +167,7 @@ org.activiti.engine.impl.bpmn.listener.ScriptTaskListener
 ``
 
 ```javascript
-myFunction("1", value2 , value3):
-if(value2 && value3){
- console.log("función javascript personalizada");
-}
+print("Script Task Listener Event: " + task.eventName);
 ```
 
 Ejecución de Script
@@ -179,6 +180,8 @@ org.activiti.engine.impl.bpmn.listener.ScriptTaskListener
 ```javascript
 print("Script Task Listener Event: " + task.eventName);
 ```
+
+[proceso implementado](./processes/ScriptTaskListener.bpmn20.xml)
 
 #### Script Execution Listener
 
