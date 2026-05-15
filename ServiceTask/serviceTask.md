@@ -20,6 +20,8 @@ por ejemplo llamar un ``Spring bean`` o ``Java Delegate``.
 
 ### Java Delegates
 
+Es la forma estándar de Activiti. El motor crea la instancia de la clase.
+
 Ejemplo : 
 ```java
 package my.company;
@@ -39,7 +41,9 @@ public class MyJavaDelegate implements JavaDelegate  {
 
 Para utilizarlo en APS debemos usar fully qualified classname en la sección de Service Task , propiedad class:  my.comany.MyJavaDelegate
 
-### Spring Beans
+### Spring Beans (mediante Expresión) 
+
+Permite llamar a un método específico de cualquier clase gestionada por Spring (no necesita implementar interfaces de Activiti).
 
 Ejemplo:
 ```java
@@ -59,6 +63,33 @@ public class HelloWorldBean{
 
 Para utilizarlo en APS debemos usar fully qualified classname en la sección de Service Task, propiedad expresión:  ${helloWorldBean.sayHello(execution)}
 
+### Expresión Delegada (Delegate Expression)
+
+Combina lo mejor de ambos enfoques: obliga a implementar la estructura robusta de JavaDelegate pero deja que Spring gestione el ciclo de vida, permitiendo el uso de Inyección de Dependencias (@Autowired).
+
+Ejemplo:
+
+```java
+package com.activiti.extension.bean;
+
+import org.activiti.engine.delegate.DelegateExecution;
+import org.activiti.engine.delegate.JavaDelegate;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
+@Component("miDelegadoSpring")
+public class MiDelegadoSpring implements JavaDelegate {
+
+    @Autowired
+    private MiServicioExterno servicio; // Inyección nativa de Spring permitida
+
+    @Override
+    public void execute(DelegateExecution execution) {
+        servicio.hacerAlgo();
+    }
+}
+```
+Para utilizarlo en APS, se usa la propiedad Expresión delegada: ${miDelegadoSpring} (El motor invocará automáticamente el método execute).
 
 ### Enfoque personalizado de configuración java
 
@@ -168,14 +199,9 @@ Context.getProcessEngineConfiguration().getRuntimeService();
 ![process engine configuration](./img/processEngineConfiguration.png)
 
 
-### Expresiones
+### Expresiones y Tipos de Datos (UEL)
 
-Las expresiones pueden ser usadas en:
-
-- Java Service tasks
-- Execution Listeners
-- Task Listeners
-- Conditional sequence flows
+Las expresiones (Sintaxis ${...}) pueden ser usadas en Java Service tasks, Execution Listeners, Task Listeners y Conditional sequence flows.
 
 
 #### Value Expression
@@ -204,6 +230,24 @@ ${myBean.addNewOrder('orderName')}
 ${myBean.doSomething(myVar, execution)}
 ```
 
+### Entrada y Salida de Datos en Tareas
+
+#### Entrada: Campos de Clase (Field Extensions)
+
+Se utiliza para inyectar parámetros (input) desde el modelador hacia el código Java (Delegates o Listeners). Deben mapearse a una variable org.activiti.engine.delegate.Expression en la clase Java.
+
+Tipos de inyección desde la UI:
+
+- Cadena (String Value): Envía texto estático y literal. El motor no evalúa el contenido. (Ej: constanciaDeposito). Genera etiqueta XML <activiti:string>.
+- Expresión (Expression): Envía valores dinámicos. El motor evalúa la variable y envía el resultado al código Java. (Ej: ${emailPostulante}). Genera etiqueta XML <activiti:expression>.
+
+#### Salida: Variable de Resultado (Result Variable)
+
+Se utiliza exclusivamente cuando se invoca una Expresión que apunta a un método de Spring que retorna un valor (tiene un return).
+
+- Uso: En el panel de propiedades, en "Nombre de la variable de resultado", se coloca el nombre deseado (sin ${}). APS tomará el valor devuelto por el método Java y lo guardará automáticamente en esa variable del proceso.
+
+> Nota: No aplica para clases que implementan JavaDelegate ya que su método execute es void.
 
 ## Lista blanca de Bean
 
