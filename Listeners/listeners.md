@@ -42,20 +42,23 @@ package pe.com.domain.delegate;
 import org.activiti.engine.delegate.ExecutionListener;
 import org.activiti.bpmn.model.FlowElement;
 import org.activiti.engine.delegate.DelegateExecution;
+import org.activiti.engine.delegate.Expression;
 
 public class JavaExecutionListener implements ExecutionListener{
+    private Expression param1;
     @Override
-    public void notify(DelegateExecution delegateExecution){
+    public void notify(DelegateExecution delegateExecution){    
+
         final String currentActivityId = delegateExecution.getCurrentActivityId();
         String activityName = null;
         FlowElement FlowElement = delegateExecution.getCurrentFlowElement();
         activityName = FlowElement.getName();
-        System.out.println("Starting the '" + activityName + "' -> " + currentActivityId + ", activity." );
+        System.out.println("Starting the '" + activityName + "' -> " + currentActivityId + ", activity. param1: " + param1.getValue(delegateExecution) );
     }
 }
 ```
 
-![execution listener with java class](./img/executionListenerJavaClass.png)
+![execution listener with java class](./img/executionListenerJavaClass2.png)
 
 
 ### Demostración Spring class
