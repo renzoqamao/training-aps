@@ -1,0 +1,64 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>org.alfresco</groupId>
+    <artifactId>activiti-app-overlay-war</artifactId>
+    <packaging>war</packaging>
+    <version>1.0-SNAPSHOT</version>
+    <name>activiti-app-overlay-war</name>
+
+    <properties>
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
+        <suite.version>24.2.0</suite.version>
+    </properties>
+
+    <repositories>
+        <repository>
+            <id>activiti-enterprise-releases</id>
+            <name>Alfresco EE releases</name>
+            <url>https://artifacts.alfresco.com/nexus/repository/activiti-enterprise-releases</url>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </repository>
+    </repositories>
+
+    <dependencies>
+        <!-- JAR de extensiones construido previamente (Método 1). -->
+        <dependency>
+            <groupId>org.alfresco</groupId>
+            <artifactId>demo-aps</artifactId>
+            <version>1.0-SNAPSHOT</version>
+            <type>jar</type>
+        </dependency>
+        <!-- WAR base de Alfresco Process Services descargado desde Nexus.
+             Sobre este WAR se realiza el overlay. -->
+        <dependency>
+            <groupId>com.activiti</groupId>
+            <artifactId>activiti-app</artifactId>
+            <version>${suite.version}</version>
+            <type>war</type>
+            <scope>runtime</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <!-- El WAR final se llamará activiti-app.war (sin sufijo de versión). -->
+        <finalName>activiti-app</finalName>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-war-plugin</artifactId>
+                <version>3.3.2</version>
+                <configuration>
+                    <!-- APS no incluye web.xml propio en el overlay. -->
+                    <failOnMissingWebXml>false</failOnMissingWebXml>
+                    <!-- Evita copiar clases del WAR base ya presentes. -->
+                    <packagingExcludes>com.activiti/</packagingExcludes>
+                    <workDirectory>./target/activiti-app</workDirectory>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</project>

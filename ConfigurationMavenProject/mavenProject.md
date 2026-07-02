@@ -28,6 +28,46 @@
 	</server>
   ```
 
+> **Alternativa — usar un `settings.xml` propio con `--settings`:** En lugar de modificar el `settings.xml` global de Maven (`~/.m2/settings.xml` o `$MAVEN_HOME/conf/settings.xml`), puede mantener un archivo independiente (por ejemplo en `/tmp/settings.xml`) y pasárselo a Maven en cada ejecución con el flag `--settings` (abreviado `-s`). Esto es útil en entornos CI/CD o contenedores, donde no conviene tocar la configuración global.
+>
+> Cree el archivo `/tmp/settings.xml` con la estructura completa:
+>
+> ```xml
+> <settings xmlns="http://maven.apache.org/SETTINGS/1.0.0"
+>     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+>     xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.0.0 http://maven.apache.org/xsd/settings-1.0.0.xsd">
+>     <servers>
+>         <server>
+>             <id>activiti-enterprise-releases</id>
+>             <username>yourAlfrescoUsername</username>
+>             <password>yourAlfrescoPassword</password>
+>         </server>
+>         <server>
+>             <id>enterprise-releases</id>
+>             <username>yourAlfrescoUsername</username>
+>             <password>yourAlfrescoPassword</password>
+>         </server>
+>         <server>
+>             <id>internal-thirdparty</id>
+>             <username>yourAlfrescoUsername</username>
+>             <password>yourAlfrescoPassword</password>
+>         </server>
+>     </servers>
+> </settings>
+> ```
+>
+> Luego compile indicando ese archivo en los comandos del Método 1:
+>
+> ```bash
+> mvn clean package --settings /tmp/settings.xml
+> ```
+>
+> El mismo flag aplica a cualquier objetivo de Maven, por ejemplo al instalar el JAR de extensiones o al construir el WAR overlay:
+>
+> ```bash
+> mvn clean install --settings /tmp/settings.xml
+> ```
+
 
 1. Creamos una carpeta llamada ```demos```.
 2. En el terminal ingresamos al directorio con el comando *cd*.
@@ -294,6 +334,121 @@ Pruebas:
 mvn clean package
 mvn clean compile assembly:single
 ```
+
+### Construir el WAR de activiti-app (WAR Overlay)
+
+Los pasos anteriores generan únicamente el **JAR de extensiones** (tu código personalizado: beans, listeners, service tasks, endpoints REST, etc.). Para desplegar en Tomcat necesitamos el WAR completo de la aplicación (`activiti-app.war`) con nuestras extensiones incluidas.
+
+La técnica utilizada es el **WAR Overlay**: Maven descarga el artefacto base `com.activiti:activiti-app` (empaquetado como `war`) desde el Nexus de Alfresco y **superpone** encima nuestro JAR de extensiones, produciendo un `activiti-app.war` personalizado. Con este método no modificamos el WAR original de Alfresco, solo lo extendemos.
+
+> Ejemplo de referencia: [alfresco-process-services-project-sdk](https://github.com/OpenPj/alfresco-process-services-project-sdk), módulo `activiti-app-overlay-war`.
+
+1. Dentro de la carpeta `demos` creamos un segundo proyecto Maven (por ejemplo `activiti-app-overlay-war`) que dependerá del JAR de extensiones `demo-aps` construido en los pasos anteriores. Su empaquetado (`packaging`) debe ser `war`.
+
+2. Configuramos el `pom.xml` del proyecto overlay. Reutilizamos las mismas `<properties>` y `<repositories>` del proyecto de extensiones (para poder resolver `${suite.version}` y descargar desde el Nexus de Alfresco):
+
+```xml
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>org.alfresco</groupId>
+    <artifactId>activiti-app-overlay-war</artifactId>
+    <packaging>war</packaging>
+    <version>1.0-SNAPSHOT</version>
+    <name>activiti-app-overlay-war</name>
+
+    <properties>
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
+        <suite.version>24.2.0</suite.version>
+    </properties>
+
+    <repositories>
+        <repository>
+            <id>activiti-enterprise-releases</id>
+            <name>Alfresco EE releases</name>
+            <url>https://artifacts.alfresco.com/nexus/repository/activiti-enterprise-releases</url>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </repository>
+    </repositories>
+
+    <dependencies>
+        <!-- JAR de extensiones construido previamente (Método 1). -->
+        <dependency>
+            <groupId>org.alfresco</groupId>
+            <artifactId>demo-aps</artifactId>
+            <version>1.0-SNAPSHOT</version>
+            <type>jar</type>
+        </dependency>
+        <!-- WAR base de Alfresco Process Services descargado desde Nexus.
+             Sobre este WAR se realiza el overlay. -->
+        <dependency>
+            <groupId>com.activiti</groupId>
+            <artifactId>activiti-app</artifactId>
+            <version>${suite.version}</version>
+            <type>war</type>
+            <scope>runtime</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <!-- El WAR final se llamará activiti-app.war (sin sufijo de versión). -->
+        <finalName>activiti-app</finalName>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-war-plugin</artifactId>
+                <version>3.3.2</version>
+                <configuration>
+                    <!-- APS no incluye web.xml propio en el overlay. -->
+                    <failOnMissingWebXml>false</failOnMissingWebXml>
+                    <!-- Evita copiar clases del WAR base ya presentes. -->
+                    <packagingExcludes>com.activiti/</packagingExcludes>
+                    <workDirectory>./target/activiti-app</workDirectory>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</project>
+```
+
+**Puntos clave del overlay:**
+
+| Elemento | Propósito |
+|----------|-----------|
+| `<packaging>war</packaging>` | Indica a Maven que el artefacto final es un WAR y activa el `maven-war-plugin`. |
+| Dependencia `com.activiti:activiti-app` con `<type>war</type>` | Es el WAR base que Maven descarga de Nexus y usa como base del overlay. |
+| Dependencia `demo-aps` (jar) | Tu JAR de extensiones; queda embebido en `WEB-INF/lib` del WAR final. |
+| `<finalName>activiti-app</finalName>` | Fuerza a que el nombre del artefacto sea `activiti-app.war`. |
+| `<scope>runtime</scope>` en el WAR base | El WAR base solo se necesita para el overlay/empaquetado, no para compilar. |
+
+3. Como el proyecto overlay depende del JAR `demo-aps`, primero debemos instalarlo en el repositorio local de Maven. Desde el proyecto de extensiones (`demo-aps`):
+
+```bash
+mvn clean install
+```
+
+4. Generamos el WAR con las extensiones. Desde el proyecto overlay (`activiti-app-overlay-war`):
+
+```bash
+mvn clean package
+```
+
+El artefacto resultante se encuentra en:
+
+```
+activiti-app-overlay-war/target/activiti-app.war
+```
+
+5. Desplegamos el WAR reemplazando el `activiti-app` existente en Tomcat de APS. Detenemos Tomcat, sustituimos la carpeta/WAR desplegado y volvemos a iniciarlo:
+
+```
+/opt/alfresco/alfresco-process-services/tomcat/webapps/activiti-app.war
+```
+
+> **Nota:** El `${suite.version}` del overlay debe coincidir con la versión de APS del ambiente destino. El WAR base `com.activiti:activiti-app` se descarga desde el Nexus de Alfresco, por lo que se requieren las credenciales configuradas en `settings.xml` (ver Prerrequisitos).
 
 
 ## Método 2
