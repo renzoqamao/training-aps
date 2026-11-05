@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Un proceso que LANZA una señal (evento intermedio de lanzamiento): no hace falta REST ni Java.
+     Al pasar por "Anunciar cambio de tasa" todas las instancias que esperan cambioTasa reaccionan. -->
+<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL"
+             xmlns:activiti="http://activiti.org/bpmn"
+             targetNamespace="http://training.aps/mensajes">
+  <signal id="sigTasa" name="cambioTasa"/>
+
+  <process id="anuncioCambioTasa" name="Anuncio de cambio de tasa" isExecutable="true">
+    <startEvent id="inicio"/>
+    <sequenceFlow id="f1" sourceRef="inicio" targetRef="anunciar"/>
+    <intermediateThrowEvent id="anunciar" name="Anunciar cambio de tasa">
+      <signalEventDefinition signalRef="sigTasa"/>
+    </intermediateThrowEvent>
+    <sequenceFlow id="f2" sourceRef="anunciar" targetRef="fin"/>
+    <endEvent id="fin"/>
+  </process>
+</definitions>

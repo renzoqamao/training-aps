@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Casos típicos sobre UNA tarea:
+     - mensaje de límite INTERRUMPIDOR: el cliente retira SU solicitud -> la tarea se cancela y el proceso termina.
+     - señal de límite NO interrumpidora: cambia la tasa para TODOS -> se recalcula y la tarea sigue activa. -->
+<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL"
+             xmlns:activiti="http://activiti.org/bpmn"
+             targetNamespace="http://training.aps/mensajes">
+  <message id="msgRetiro" name="retiroSolicitud"/>
+  <signal id="sigTasa" name="cambioTasa"/>
+
+  <process id="solicitudCredito" name="Solicitud de crédito" isExecutable="true">
+    <startEvent id="inicio" activiti:initiator="initiator"/>
+    <sequenceFlow id="f1" sourceRef="inicio" targetRef="evaluar"/>
+    <userTask id="evaluar" name="Evaluar crédito" activiti:assignee="${initiator}"/>
+    <sequenceFlow id="f2" sourceRef="evaluar" targetRef="finAprobada"/>
+    <endEvent id="finAprobada" name="Evaluada"/>
+
+    <!-- Mensaje de límite interrumpidor (cancelActivity=true por defecto) -->
+    <boundaryEvent id="porRetiro" name="Cliente retira" attachedToRef="evaluar" cancelActivity="true">
+      <messageEventDefinition messageRef="msgRetiro"/>
+    </boundaryEvent>
+    <sequenceFlow id="f3" sourceRef="porRetiro" targetRef="finRetirada"/>
+    <endEvent id="finRetirada" name="Retirada"/>
+
+    <!-- Señal de límite NO interrumpidora: la tarea "Evaluar crédito" sigue activa -->
+    <boundaryEvent id="porTasa" name="Cambio de tasa" attachedToRef="evaluar" cancelActivity="false">
+      <signalEventDefinition signalRef="sigTasa"/>
+    </boundaryEvent>
+    <sequenceFlow id="f4" sourceRef="porTasa" targetRef="recalcular"/>
+    <serviceTask id="recalcular" name="Recalcular cuota" activiti:expression="${monto * 1.1 / plazo}" activiti:resultVariable="cuota"/>
+    <sequenceFlow id="f5" sourceRef="recalcular" targetRef="finRecalculo"/>
+    <endEvent id="finRecalculo" name="Cuota recalculada"/>
+  </process>
+</definitions>
