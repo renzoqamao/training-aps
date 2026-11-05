@@ -58,6 +58,67 @@ Las siguientes construcciones BPMN que se pueden incluir en una definición de p
 
 La API pública (`/api/enterprise`) **no** tiene endpoints de mensajes ni señales: se usa la API del motor (requiere la capacidad *tenant-admin* o *tenant-admin-api*, ver [API ReST](../API-ReST/apiRest.md)) o código Java.
 
+## Cómo se envía un mensaje y cómo se envía una señal
+
+### Mensaje: dos pasos (buscar a quién y entregárselo)
+
+Un mensaje va **a una instancia concreta**. Ejemplo: hay 3 pedidos parados en "Esperar pago" y llega el pago del P-001; sólo ese debe avanzar.
+
+**1. Buscar la ejecución que espera el mensaje.** Una instancia tiene varias *ejecuciones* ([qué son](../ConceptosMotor/conceptosMotor.md#ejecuciones-una-raíz-y-una-hija-por-cada-camino-activo)); la que está parada en el evento de mensaje tiene la suscripción:
+
+```
+GET /api/runtime/executions?tenantId=tenant_1&processInstanceId=<id del pedido>&messageEventSubscriptionName=pagoRecibido
+```
+
+Si viene vacía, ese pedido no está esperando el mensaje (aún no llegó a ese punto o ya pasó).
+
+**2. Entregárselo** (con variables si quieres):
+
+```
+PUT /api/runtime/executions/<executionId>
+{"action":"messageEventReceived","messageName":"pagoRecibido","variables":[{"name":"importe","value":250}]}
+```
+
+En Java son los mismos pasos:
+
+```java
+ProcessInstance pi = runtimeService.createProcessInstanceQuery()
+        .processInstanceBusinessKey("P-001").singleResult();                    // 1a. el pedido
+Execution ex = runtimeService.createExecutionQuery()
+        .processInstanceId(pi.getId())
+        .messageEventSubscriptionName("pagoRecibido").singleResult();           // 1b. quién espera
+runtimeService.messageEventReceived("pagoRecibido", ex.getId(), Map.of("importe", 250)); // 2. entregar
+```
+
+Si el mensaje **inicia** un proceso no hay a quién buscar (la instancia aún no existe): se envía sólo el nombre.
+
+```
+POST /api/runtime/process-instances?tenantId=tenant_1   {"message":"nuevaSolicitud","tenantId":"tenant_1"}
+```
+
+### Señal: un paso (lanzar el nombre)
+
+Una señal **no tiene destinatario**:
+
+```
+POST /api/runtime/signals?tenantId=tenant_1   {"signalName":"alertaGlobal","tenantId":"tenant_1"}
+```
+
+En Java: `runtimeService.signalEventReceivedWithTenantId("alertaGlobal", "tenant_1");`. Desde otro proceso, sin código: un evento intermedio de **lanzamiento** de señal (caso 6).
+
+De golpe: se disparan todos los eventos de límite y de captura que la esperan y arranca una instancia de cada proceso que empieza con ella. Si nadie la espera, no pasa nada y no da error.
+
+### Desde un proceso
+
+| Quiero | Cómo |
+|---|---|
+| Lanzar una **señal** | evento intermedio de lanzamiento de señal (BPMN puro) |
+| **Entregar** un mensaje a otra instancia | service task con Java ([`notificarPago`](../EjemplosJava/README.md#mensajeriabean)) o script groovy (caso 4) |
+| **Iniciar** un proceso por mensaje | service task con Java ([`iniciarPorMensaje`](../EjemplosJava/README.md#mensajeriabean)) o script groovy (caso 4) |
+| Usar un evento de lanzamiento de **mensaje** | ❌ no entrega nada (comprobado) |
+
+En resumen: con un mensaje primero tienes que saber **qué caso** quieres mover; con una señal sólo **qué pasó**.
+
 ## Definición en BPMN
 
 ```xml
@@ -251,11 +312,50 @@ Al desplegar, el motor registra en la tabla `ACT_RU_EVENT_SUBSCR` una **suscripc
 ```
 
 - Un mensaje tiene **un único destinatario**: `{"message":"nuevaSolicitud"}` debe saber exactamente qué proceso iniciar. Si dos procesos distintos estuvieran suscritos al mismo nombre, el arranque sería ambiguo. Por eso el motor **rechaza el segundo despliegue** (HTTP 500): `there already is a message event subscription for the message with name 'nuevaSolicitud'`.
-- Una **nueva versión del mismo proceso** sí se despliega: reemplaza la suscripción (tras redesplegar, la fila pasó a `solicitudDemo:2:40905`) y el mensaje inicia la última versión.
+- Una **nueva versión del mismo proceso** ([qué son las versiones](../ConceptosMotor/conceptosMotor.md#las-definiciones-no-se-modifican-se-versionan)) sí se despliega: reemplaza la suscripción (tras redesplegar, la fila pasó a `solicitudDemo:2:40905`) y el mensaje inicia la última versión.
 - Las **señales** son de difusión, así que no hay ambigüedad: dos procesos distintos con la misma señal de inicio se despliegan sin problema y la señal arranca los dos.
 - Las suscripciones de mensajes de **captura y de límite** (casos 1 y 3) son de cada ejecución en espera (`execution_id_` relleno), así que el mismo nombre puede usarse en muchas instancias y procesos.
 
 Si necesitas que dos procesos reaccionen al mismo aviso de inicio, usa una **señal**, o un mensaje distinto para cada uno.
+
+### Variables que viajan con el mensaje
+
+Se pueden pasar **N variables** y **no hace falta que existan antes**. Comprobado entregando 5 variables a un pedido que ya tenía `importe=100` y `cliente=ACME`:
+
+```
+{"action":"messageEventReceived","messageName":"pagoRecibido","variables":[
+  {"name":"importe","value":250},                                     ← ya existía
+  {"name":"medioPago","value":"tarjeta"},                             ← nueva
+  {"name":"cuotas","value":3},                                        ← nueva
+  {"name":"pagado","value":true},                                     ← nueva
+  {"name":"fechaPago","value":"2026-11-05T10:00:00Z","type":"date"}]}  ← nueva
+```
+
+| Variable | Antes | Después |
+|---|---|---|
+| `importe` | 100 | **250**: la existente se **sobrescribe** |
+| `cliente` | ACME | ACME: las que no envías no se tocan |
+| `medioPago`, `cuotas`, `pagado`, `fechaPago` | — | **se crean** (`string`, `integer`, `boolean`, `date`) |
+
+- Quedan a nivel de **proceso** (en la ejecución raíz) aunque el mensaje se entregue a la ejecución hija; las hijas no reciben variables locales. Cualquier tarea o expresión posterior las ve.
+- El tipo se deduce del valor JSON; para fechas indica `"type":"date"` (si no, se guarda como texto).
+- Lo mismo al iniciar por mensaje: `"variables":[...]` en el `POST` crea las variables de la nueva instancia.
+
+### ¿Cuántas instancias crea un mensaje de inicio?
+
+**Una por cada envío, y pueden convivir todas.** Comprobado: 3 envíos de `nuevaSolicitud` → 3 instancias de `solicitudDemo` activas a la vez (`SOL-0`, `SOL-1`, `SOL-2`).
+
+La restricción es sobre las **definiciones**, no sobre las instancias: como un número de teléfono, sólo un proceso puede "atender" ese mensaje, pero atiende todas las llamadas.
+
+| Al enviar un mensaje de inicio... | Resultado |
+|---|---|
+| un proceso lo escucha | **1** instancia, de su **última versión** |
+| hay dos versiones del mismo proceso (misma clave) | **1** instancia de la última versión: la v1 dejó de escuchar al desplegar la v2 |
+| dos procesos distintos lo escuchan | imposible: el segundo no se pudo desplegar |
+
+Si lo que quieres es arrancar **varios** procesos con el mismo aviso, usa una **señal**: comprobado, dos procesos distintos con la misma señal de inicio arrancaron **una instancia cada uno**.
+
+Evitar duplicados de negocio (p. ej. dos solicitudes abiertas del mismo cliente) no lo hace el motor: compruébalo antes de enviar el mensaje, por ejemplo buscando instancias activas con ese *business key*.
 
 ## Ejemplos probados en APS 24.4
 
@@ -270,7 +370,11 @@ Si necesitas que dos procesos reaccionen al mismo aviso de inicio, usa una **se�
   OK    la señal disparó el evento de límite: el pedido terminó (cancelado)
   OK    la misma señal inició atenderAlertaDemo (0 -> 1)
   OK    el pedido terminó por el camino finCancelado
-  OK    el mensaje inició solicitudDemo:1:30040
+  OK    el mensaje inició solicitudDemo:1:43026
+  OK    la existente se sobrescribió (importe 100 -> 250); cliente no se tocó
+  OK    las nuevas se crearon con su tipo (string, integer, boolean, date)
+  OK    quedaron a nivel de proceso (las ejecuciones hijas no tienen variables locales)
+  OK    3 envíos del mismo mensaje -> 3 instancias activas a la vez
   OK    otro proceso con el mismo mensaje de inicio nuevaSolicitud -> HTTP 500 (rechazado)
   OK    señal sin ?tenantId en la URL -> HTTP 403
 Casos típicos sobre una tarea (solicitudCredito + anuncioCambioTasa)

@@ -37,6 +37,28 @@ try:
     check(r['processDefinitionId'].startswith('solicitudDemo:'), f"el mensaje inició {r['processDefinitionId']}")
     call('DELETE', f"runtime/process-instances/{r['id']}")
 
+    # --- Variables con el mensaje: no hace falta que existan; las nuevas se crean y las existentes se sobrescriben
+    pv = start('pedidoDemo', {'importe': 100, 'cliente': 'ACME'})['id']
+    exv = call('GET', f'runtime/executions?{T}&processInstanceId={pv}&messageEventSubscriptionName=pagoRecibido')[1]['data'][0]['id']
+    call('PUT', f'runtime/executions/{exv}', {'action': 'messageEventReceived', 'messageName': 'pagoRecibido', 'variables': [
+        {'name': 'importe', 'value': 250}, {'name': 'medioPago', 'value': 'tarjeta'}, {'name': 'cuotas', 'value': 3},
+        {'name': 'pagado', 'value': True}, {'name': 'fechaPago', 'value': '2026-11-05T10:00:00Z', 'type': 'date'}]})
+    vs = {v['name']: (v['value'], v['type']) for v in call('GET', f'runtime/process-instances/{pv}/variables')[1]}
+    check(vs.get('importe') == (250, 'integer') and vs.get('cliente') == ('ACME', 'string'), 'la existente se sobrescribió (importe 100 -> 250); cliente no se tocó')
+    check(vs.get('medioPago') == ('tarjeta', 'string') and vs.get('cuotas') == (3, 'integer') and vs.get('pagado') == (True, 'boolean')
+          and vs.get('fechaPago', (0, ''))[1] == 'date', 'las nuevas se crearon con su tipo (string, integer, boolean, date)')
+    hijas = [e for e in call('GET', f'runtime/executions?{T}&processInstanceId={pv}')[1]['data'] if e['parentId']]
+    check(all(not call('GET', f"runtime/executions/{e['id']}/variables?scope=local")[1] for e in hijas),
+          'quedaron a nivel de proceso (las ejecuciones hijas no tienen variables locales)')
+    call('DELETE', f'runtime/process-instances/{pv}')
+
+    # --- Un mensaje de inicio crea una instancia por envío: puede haber muchas a la vez
+    for i in range(3):
+        call('POST', f'runtime/process-instances?{T}', {'message': 'nuevaSolicitud', 'tenantId': TENANT, 'businessKey': f'SOL-{i}'})
+    act = call('GET', f'runtime/process-instances?{T}&processDefinitionKey=solicitudDemo')[1]['data']
+    check(sorted(p['businessKey'] for p in act) == ['SOL-0', 'SOL-1', 'SOL-2'], f'3 envíos del mismo mensaje -> {len(act)} instancias activas a la vez')
+    for p in act: call('DELETE', f"runtime/process-instances/{p['id']}")
+
     # --- Otro proceso NO puede arrancar con el mismo mensaje (la suscripción es única por nombre)
     otro = b"""<?xml version="1.0" encoding="UTF-8"?>
 <definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL" targetNamespace="http://t">
