@@ -2,3 +2,4 @@
 target/
 *.log
 *.tmp
+__pycache__/
