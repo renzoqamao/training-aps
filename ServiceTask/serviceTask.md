@@ -342,3 +342,51 @@ javascript.secure-scripting.enabled=true
     org.apache.tomcat.util.log.SystemLogHandler
     ```
 > **Nota**: La habilitación de scripts seguros para clases de Java utilizadas en JavaScript se activa cuando la configuración falta en el archivo de propiedades o está comentada.
+
+
+## Lo comprobado en APS 24.4
+
+Probado en APS 24.4.0 con [`ejemplos/`](./ejemplos/) y [`../EjemplosJava`](../EjemplosJava/README.md).
+
+**Valores por defecto.** El `activiti-app.properties` que trae el war (`WEB-INF/classes/META-INF/activiti-app/activiti-app.properties`) tiene **`beans.whitelisting.enabled=true`** y **`el.whitelisting.enabled=true`**: en 24.4 las listas blancas vienen **activas**, aunque la documentación antigua diga "falso por defecto". Se desactivan en el override `tomcat/lib/activiti-app.properties`.
+
+**Dos listas distintas:**
+
+| Propiedad | Archivo | Qué controla | Error si falta |
+|---|---|---|---|
+| `beans.whitelisting.enabled` | `beans-whitelist.conf` | qué **beans** se pueden nombrar en una expresión (`${historyService...}`) | `Unknown property used in expression` |
+| `el.whitelisting.enabled` | `call-whitelist.conf` | qué **métodos** se pueden llamar en una expresión (incluido `execution.setVariable(...)`) | `Unknown method used in expression` |
+
+En ambos casos el Service Task falla al iniciar la instancia (HTTP 500) y **la instancia no se crea**.
+
+**Patrones de `call-whitelist.conf` que funcionaron** (formato `clase.método`, admite `*`):
+
+```properties
+# execution.setVariable(...), task.setVariable(...) en expresiones y listeners
+org.activiti.engine.delegate.DelegateExecution.*
+org.activiti.engine.delegate.DelegateTask.*
+# ${historyService.createHistoricProcessInstanceQuery()....count()}: hay que nombrar las clases de IMPLEMENTACIÓN
+org.activiti.engine.impl.HistoryServiceImpl.*
+org.activiti.engine.impl.HistoricProcessInstanceQueryImpl.*
+```
+
+Con `org.activiti.engine.*Service.*` u `org.activiti.engine.history.*Query.*` (las interfaces) la llamada **siguió bloqueada**.
+
+**Beans propios:** los beans del paquete `com.activiti.extension.bean` funcionaron con ambas listas activas **sin añadirlos** a `beans-whitelist.conf` ni a `call-whitelist.conf`.
+
+**Expresiones sin beans** (`${monto * 1.18}`) funcionan siempre.
+
+**Detalle de transacción:** una consulta al historial desde el Service Task **no ve la instancia actual** (aún no está guardada): la primera instancia cuenta 0, la segunda 1.
+
+## Ejemplos probados
+
+| Ejemplo | Qué demuestra |
+|---|---|
+| [`ejemplos/serviceTaskWhitelist.bpmn20.xml`](./ejemplos/serviceTaskWhitelist.bpmn20.xml) + [`probar.py`](./ejemplos/probar.py) | bean permitido (`historyService`), bean bloqueado (`runtimeService`) y expresión sin beans |
+| [`EjemplosJava`](../EjemplosJava/README.md) | `activiti:class` con *field injection*, bean en expresión, *delegate expression* con `@Autowired` |
+
+```bash
+cd ServiceTask/ejemplos
+APS_WHITELIST=true  APS_USER=... APS_PASS=... python probar.py   # servidor con las listas activas (por defecto)
+APS_WHITELIST=false APS_USER=... APS_PASS=... python probar.py   # servidor con beans.whitelisting.enabled=false
+```

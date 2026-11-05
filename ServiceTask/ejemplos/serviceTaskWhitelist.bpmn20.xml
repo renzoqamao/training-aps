@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Service tasks con activiti:expression sobre beans de Spring de APS.
+     Con beans.whitelisting.enabled=true sólo funcionan los beans listados en
+     WEB-INF/classes/activiti/beans-whitelist.conf (historyService sí, runtimeService no). -->
+<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL"
+             xmlns:activiti="http://activiti.org/bpmn"
+             targetNamespace="http://training.aps/servicetask">
+
+  <!-- 1) Bean en la lista blanca: el resultado de la expresión se guarda en resultVariable -->
+  <process id="serviceTaskPermitido" name="Service task con bean permitido" isExecutable="true">
+    <startEvent id="inicio" activiti:initiator="initiator"/>
+    <sequenceFlow id="f1" sourceRef="inicio" targetRef="contar"/>
+    <serviceTask id="contar" name="Contar instancias históricas"
+                 activiti:expression="${historyService.createHistoricProcessInstanceQuery().processDefinitionKey('serviceTaskPermitido').count()}"
+                 activiti:resultVariable="instancias"/>
+    <sequenceFlow id="f2" sourceRef="contar" targetRef="ver"/>
+    <userTask id="ver" name="Ver resultado" activiti:assignee="${initiator}"/>
+    <sequenceFlow id="f3" sourceRef="ver" targetRef="fin"/>
+    <endEvent id="fin"/>
+  </process>
+
+  <!-- 2) Bean fuera de la lista blanca: la instancia NO arranca (HTTP 500 al iniciar) -->
+  <process id="serviceTaskBloqueado" name="Service task con bean no permitido" isExecutable="true">
+    <startEvent id="inicio2"/>
+    <sequenceFlow id="g1" sourceRef="inicio2" targetRef="contar2"/>
+    <serviceTask id="contar2" name="Contar instancias en ejecución"
+                 activiti:expression="${runtimeService.createProcessInstanceQuery().count()}"
+                 activiti:resultVariable="instancias"/>
+    <sequenceFlow id="g2" sourceRef="contar2" targetRef="fin2"/>
+    <endEvent id="fin2"/>
+  </process>
+
+  <!-- 3) Expresión sin beans: siempre permitida (usa execution y variables del proceso) -->
+  <process id="serviceTaskExpresion" name="Service task con expresión simple" isExecutable="true">
+    <startEvent id="inicio3"/>
+    <sequenceFlow id="h1" sourceRef="inicio3" targetRef="calcular"/>
+    <serviceTask id="calcular" name="Calcular total" activiti:expression="${monto * 1.18}" activiti:resultVariable="total"/>
+    <sequenceFlow id="h2" sourceRef="calcular" targetRef="fin3"/>
+    <endEvent id="fin3"/>
+  </process>
+</definitions>
