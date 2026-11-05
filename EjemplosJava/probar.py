@@ -35,6 +35,11 @@ try:
     check(hist_vars(otro).get('entregado') is False, 'sin ejecución esperando -> entregado=false')
     start('alertadorJava')
     check(ended(pedido), 'alertar(tenantId) disparó el evento de límite: el pedido terminó')
+    ini = start('iniciadorJava')['id']
+    sid = hist_vars(ini).get('solicitudCreada')
+    sv = hist_vars(sid) if sid else {}
+    check(sid and sv.get('origen') == 'java', f"iniciarPorMensaje() creó la instancia {sid} de solicitudJava (origen={sv.get('origen')})")
+    if sid: call('DELETE', f'runtime/process-instances/{sid}')
 finally:
     undeploy(dep)
 done()

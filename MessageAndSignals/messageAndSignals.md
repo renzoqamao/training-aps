@@ -137,6 +137,23 @@ Un evento intermedio de *lanzamiento* de mensaje **no entrega nada**. **Comproba
 
 El bean busca el pedido por *business key*, luego la ejecución que espera `pagoRecibido`, y devuelve `false` si nadie lo espera.
 
+El mismo bean también **inicia** un proceso por mensaje (`iniciarPorMensaje`, probado con `iniciadorJava` → `solicitudJava`).
+
+**Sin compilar Java: script task en groovy.** Desde un script se llega al `RuntimeService` del motor y se hacen los mismos pasos. **Comprobado:** entregó el mensaje al pedido `P-777` (pasó a "Despachar pedido" con `importe=99`) e inició `solicitudDemo`:
+
+```groovy
+def rs = org.activiti.engine.impl.context.Context.getProcessEngineConfiguration().getRuntimeService()
+// entregar a una instancia en espera
+def pi = rs.createProcessInstanceQuery().processInstanceBusinessKey(pedidoId).singleResult()
+def ex = pi == null ? null : rs.createExecutionQuery().processInstanceId(pi.getId())
+                                 .messageEventSubscriptionName('pagoRecibido').singleResult()
+if (ex != null) rs.messageEventReceived('pagoRecibido', ex.getId(), [importe: 99])
+// iniciar un proceso por mensaje, en el tenant de esta ejecución
+rs.startProcessInstanceByMessageAndTenantId('nuevaSolicitud', [origen: 'script'], execution.getTenantId())
+```
+
+Es útil para prototipos; para producción es mejor el bean Java (se prueba, se versiona y no depende de clases internas `impl` del motor).
+
 ### 5. Cancelación masiva (límite de señal interrumpidor)
 
 ```

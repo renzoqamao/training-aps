@@ -4,6 +4,7 @@
              xmlns:activiti="http://activiti.org/bpmn"
              targetNamespace="http://training.aps/java">
   <message id="msgPago" name="pagoRecibido"/>
+  <message id="msgSolicitudJava" name="nuevaSolicitudJava"/>
   <signal id="sigAlerta" name="alertaGlobal"/>
 
   <!-- 1) Service tasks (class, expression, delegateExpression) y listeners Java -->
@@ -71,5 +72,23 @@
     <serviceTask id="alertar" name="Alertar" activiti:expression="${mensajeriaBean.alertar(execution.tenantId)}"/>
     <sequenceFlow id="r2" sourceRef="alertar" targetRef="r3"/>
     <endEvent id="r3"/>
+  </process>
+  <!-- 5) Proceso que ARRANCA con un mensaje, y otro que lo inicia desde Java -->
+  <process id="solicitudJava" name="Solicitud (Java)" isExecutable="true">
+    <startEvent id="s0"><messageEventDefinition messageRef="msgSolicitudJava"/></startEvent>
+    <sequenceFlow id="s1" sourceRef="s0" targetRef="revisarSol"/>
+    <userTask id="revisarSol" name="Revisar solicitud"/>
+    <sequenceFlow id="s2" sourceRef="revisarSol" targetRef="s3"/>
+    <endEvent id="s3"/>
+  </process>
+
+  <process id="iniciadorJava" name="Iniciador por mensaje (Java)" isExecutable="true">
+    <startEvent id="i0"/>
+    <sequenceFlow id="i1" sourceRef="i0" targetRef="iniciar"/>
+    <serviceTask id="iniciar" name="Iniciar solicitud"
+                 activiti:expression="${mensajeriaBean.iniciarPorMensaje('nuevaSolicitudJava', execution.tenantId)}"
+                 activiti:resultVariable="solicitudCreada"/>
+    <sequenceFlow id="i2" sourceRef="iniciar" targetRef="i3"/>
+    <endEvent id="i3"/>
   </process>
 </definitions>

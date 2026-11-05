@@ -45,6 +45,14 @@ public class MensajeriaBean {
     }
 
     /**
+     * Inicia el proceso cuyo evento de inicio escucha {@code mensaje} (sólo puede haber uno por tenant) y devuelve
+     * el id de la nueva instancia. Se usa: {@code ${mensajeriaBean.iniciarPorMensaje('nuevaSolicitud', execution.tenantId)}}.
+     */
+    public String iniciarPorMensaje(String mensaje, String tenantId) {
+        return runtimeService.startProcessInstanceByMessageAndTenantId(mensaje, Map.of("origen", "java"), tenantId).getId();
+    }
+
+    /**
      * Difunde una señal a todo el tenant. En APS las definiciones viven en un tenant (tenant_1), por eso se usa
      * la variante con tenantId; sin ella la señal no alcanza a esos procesos.
      */

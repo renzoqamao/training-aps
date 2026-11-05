@@ -76,6 +76,7 @@ MensajeriaBean: mensaje y señal desde Java
   OK    el pedido avanzó a Despachar con importe=250
   OK    sin ejecución esperando -> entregado=false
   OK    alertar(tenantId) disparó el evento de límite: el pedido terminó
+  OK    iniciarPorMensaje() creó la instancia 42731 de solicitudJava (origen=java)
 Todo OK
 ```
 
@@ -230,7 +231,7 @@ public class PrioridadTaskListener implements TaskListener {
 
 `com.activiti.extension.bean.MensajeriaBean` · [código](./src/main/java/com/activiti/extension/bean/MensajeriaBean.java)
 
-**Qué hace:** entrega el mensaje `pagoRecibido` al pedido con cierto business key, y difunde la señal `alertaGlobal`.
+**Qué hace:** entrega el mensaje `pagoRecibido` al pedido con cierto business key, inicia un proceso por mensaje y difunde la señal `alertaGlobal`.
 
 ```java
 public boolean notificarPago(String pedidoId, Number importe) {
@@ -247,12 +248,16 @@ public boolean notificarPago(String pedidoId, Number importe) {
     return true;
 }
 
+public String iniciarPorMensaje(String mensaje, String tenantId) {
+    return runtimeService.startProcessInstanceByMessageAndTenantId(mensaje, Map.of("origen", "java"), tenantId).getId();
+}
+
 public void alertar(String tenantId) {
     runtimeService.signalEventReceivedWithTenantId("alertaGlobal", tenantId);
 }
 ```
 
-**En el modeler:** Service Task → *Expression* = `${mensajeriaBean.notificarPago(pedidoId, importe)}` con *Result variable* `entregado`; y `${mensajeriaBean.alertar(execution.tenantId)}`.
+**En el modeler:** Service Task → *Expression* = `${mensajeriaBean.notificarPago(pedidoId, importe)}` con *Result variable* `entregado`; `${mensajeriaBean.iniciarPorMensaje('nuevaSolicitudJava', execution.tenantId)}` (proceso `iniciadorJava`: arranca `solicitudJava`, que empieza con ese mensaje); y `${mensajeriaBean.alertar(execution.tenantId)}`.
 
 **A tener en cuenta**
 - ⚠ **Comprobado:** `createExecutionQuery().processInstanceBusinessKey(x).messageEventSubscriptionName(y)` **no devuelve nada**. El business key está en la ejecución raíz y la suscripción en una ejecución hija, así que hay que buscar en dos pasos, como arriba.
