@@ -167,3 +167,43 @@ Agregue los siguientes elementos BPMN al nuevo proceso y conéctelos de la sigui
 
 
 [Aplicación implementada](./apps/ScriptTask.zip)
+
+
+## Ejemplo probado en APS 24.4
+
+[`ejemplos/scriptTaskDemo.bpmn20.xml`](./ejemplos/scriptTaskDemo.bpmn20.xml) es la versión ejecutable del ejercicio de esta sección: la compuerta elige por `usegroovy` y cada script task deja `sender` y `resultado`.
+
+```xml
+<!-- Groovy: la última expresión es el valor de retorno, que activiti:resultVariable guarda -->
+<scriptTask id="groovyTask" scriptFormat="groovy" activiti:resultVariable="resultado">
+  <script>
+    execution.setVariable('sender', 'groovy')
+    message.toUpperCase()
+  </script>
+</scriptTask>
+
+<!-- JavaScript: lee variables del proceso por su nombre (message) -->
+<scriptTask id="jsTask" scriptFormat="javascript" activiti:autoStoreVariables="false">
+  <script>
+    execution.setVariable('sender', 'javascript');
+    execution.setVariable('resultado', message.split('').reverse().join(''));
+  </script>
+</scriptTask>
+```
+
+Resultado de [`ejemplos/probar.py`](./ejemplos/probar.py):
+
+```
+  OK    usegroovy=True: sender='groovy' resultado='HOLA APS'
+  OK    usegroovy=False: sender='javascript' resultado='SPA aloH'
+```
+
+### Lo comprobado
+
+- Funciona igual con `beans.whitelisting.enabled=true` y `el.whitelisting.enabled=true`: los scripts no pasan por esas listas; lo que manda es `whitelisted-scripts.conf` (lenguajes permitidos).
+- `activiti:resultVariable` guarda el valor de la **última expresión** del script (útil en groovy).
+- Usa `execution.setVariable(...)` en lugar de depender de `autoStoreVariables`: es explícito y no guarda variables temporales del script.
+
+```bash
+cd CustomScriptTask/ejemplos && APS_USER=... APS_PASS=... python probar.py
+```

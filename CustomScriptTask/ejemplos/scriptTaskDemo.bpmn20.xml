@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Versión ejecutable por API del ejercicio de la sección: el usuario envía un mensaje y elige
+     groovy o javascript; la compuerta enruta y cada script task deja su resultado en variables. -->
+<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL"
+             xmlns:activiti="http://activiti.org/bpmn"
+             targetNamespace="http://training.aps/scripttask">
+  <process id="scriptTaskDemo" name="Demo de script tasks" isExecutable="true">
+    <startEvent id="inicio" activiti:initiator="initiator"/>
+    <sequenceFlow id="f1" sourceRef="inicio" targetRef="elegir"/>
+
+    <exclusiveGateway id="elegir" default="aJs"/>
+    <sequenceFlow id="aGroovy" sourceRef="elegir" targetRef="groovyTask">
+      <conditionExpression xsi:type="tFormalExpression" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">${usegroovy == true}</conditionExpression>
+    </sequenceFlow>
+    <sequenceFlow id="aJs" sourceRef="elegir" targetRef="jsTask"/>
+
+    <!-- Groovy: la última expresión es el valor de retorno, que activiti:resultVariable guarda -->
+    <scriptTask id="groovyTask" name="Mensaje en groovy" scriptFormat="groovy" activiti:resultVariable="resultado">
+      <script><![CDATA[
+        execution.setVariable('sender', 'groovy')
+        message.toUpperCase()
+      ]]></script>
+    </scriptTask>
+
+    <!-- JavaScript: también puede leer variables del proceso por su nombre (message) -->
+    <scriptTask id="jsTask" name="Mensaje en javascript" scriptFormat="javascript" activiti:autoStoreVariables="false">
+      <script><![CDATA[
+        execution.setVariable('sender', 'javascript');
+        execution.setVariable('resultado', message.split('').reverse().join(''));
+      ]]></script>
+    </scriptTask>
+
+    <sequenceFlow id="g2" sourceRef="groovyTask" targetRef="unir"/>
+    <sequenceFlow id="j2" sourceRef="jsTask" targetRef="unir"/>
+    <exclusiveGateway id="unir"/>
+    <sequenceFlow id="f2" sourceRef="unir" targetRef="ver"/>
+    <userTask id="ver" name="Ver resultado" activiti:assignee="${initiator}"/>
+    <sequenceFlow id="f3" sourceRef="ver" targetRef="fin"/>
+    <endEvent id="fin"/>
+  </process>
+</definitions>
