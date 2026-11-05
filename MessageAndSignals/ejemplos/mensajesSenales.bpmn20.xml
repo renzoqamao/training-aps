@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Mensajes (dirigidos a UNA ejecución) y señales (difusión a todo el tenant). Ver probar.py. -->
+<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL"
+             xmlns:activiti="http://activiti.org/bpmn"
+             targetNamespace="http://training.aps/mensajes">
+  <message id="msgPago" name="pagoRecibido"/>
+  <message id="msgSolicitud" name="nuevaSolicitud"/>
+  <signal id="sigAlerta" name="alertaGlobal"/>
+
+  <!-- 1) Espera un mensaje (evento intermedio de captura) y luego una tarea con evento de LÍMITE de señal -->
+  <process id="pedidoDemo" name="Pedido: espera pago, se cancela con alerta" isExecutable="true">
+    <startEvent id="inicio" activiti:initiator="initiator"/>
+    <sequenceFlow id="f1" sourceRef="inicio" targetRef="esperarPago"/>
+    <intermediateCatchEvent id="esperarPago" name="Esperar pago">
+      <messageEventDefinition messageRef="msgPago"/>
+    </intermediateCatchEvent>
+    <sequenceFlow id="f2" sourceRef="esperarPago" targetRef="despachar"/>
+    <userTask id="despachar" name="Despachar pedido" activiti:assignee="${initiator}"/>
+    <!-- Límite interrumpidor: si llega la señal mientras la tarea está activa, la tarea se cancela -->
+    <boundaryEvent id="porAlerta" attachedToRef="despachar" cancelActivity="true">
+      <signalEventDefinition signalRef="sigAlerta"/>
+    </boundaryEvent>
+    <sequenceFlow id="f3" sourceRef="despachar" targetRef="finOk"/>
+    <sequenceFlow id="f4" sourceRef="porAlerta" targetRef="finCancelado"/>
+    <endEvent id="finOk" name="Despachado"/>
+    <endEvent id="finCancelado" name="Cancelado por alerta"/>
+  </process>
+
+  <!-- 2) Proceso que ARRANCA con la señal (evento de inicio de señal) -->
+  <process id="atenderAlertaDemo" name="Atender alerta" isExecutable="true">
+    <startEvent id="inicioSenal"><signalEventDefinition signalRef="sigAlerta"/></startEvent>
+    <sequenceFlow id="g1" sourceRef="inicioSenal" targetRef="atender"/>
+    <userTask id="atender" name="Atender alerta"/>
+    <sequenceFlow id="g2" sourceRef="atender" targetRef="finAlerta"/>
+    <endEvent id="finAlerta"/>
+  </process>
+
+  <!-- 3) Proceso que ARRANCA con un mensaje (evento de inicio de mensaje) -->
+  <process id="solicitudDemo" name="Solicitud por mensaje" isExecutable="true">
+    <startEvent id="inicioMsg"><messageEventDefinition messageRef="msgSolicitud"/></startEvent>
+    <sequenceFlow id="h1" sourceRef="inicioMsg" targetRef="revisar"/>
+    <userTask id="revisar" name="Revisar solicitud"/>
+    <sequenceFlow id="h2" sourceRef="revisar" targetRef="finSol"/>
+    <endEvent id="finSol"/>
+  </process>
+</definitions>
