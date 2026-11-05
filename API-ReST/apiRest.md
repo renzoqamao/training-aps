@@ -4,6 +4,86 @@ La API ReST expone las operaciones genéricas de Process Engine. También incluy
 
 > **Nota**: También existe una API ReST interna que la interfaz de usuario de JavaScript utiliza como puntos finales de ReST. NO utilice esta API, ya que las URL de la API ReST pueden modificar el producto para utilizar funciones no compatibles. Además, la API ReST interna utiliza un mecanismo de autenticación diferente adaptado al uso del navegador web.
 
+## Lo comprobado en APS 24.4 (léelo primero)
+
+Todo lo de esta sección se probó en APS 24.4.0 con [`ejemplos/recorrido.py`](./ejemplos/recorrido.py), que repite cada comprobación y limpia lo que crea:
+
+```bash
+cd API-ReST/ejemplos
+APS_USER=admin@app.activiti.com APS_PASS=<clave> python recorrido.py
+# opcional: APS_TEST_PASS=<clave> crea/reutiliza un usuario sin capacidades (al final lo deja inactivo)
+```
+
+### ¿API pública o API del motor? Mira la URL
+
+| URL | API | Quién puede usarla |
+|---|---|---|
+| `/activiti-app/api/enterprise/...` | **Pública** (Process Services) | cualquier usuario activo; cada uno ve lo suyo, *tenant-admin* ve todo |
+| `/activiti-app/api/{repository,runtime,history,query,management}/...` | **Motor** (Activiti) | sólo usuarios con la capacidad *tenant-admin* o *tenant-admin-api* (otro usuario: 403) |
+| `/activiti-app/app/rest/...` | Interna de la UI | no usar (cookies, puede cambiar) |
+
+### Reglas que conviene saber
+
+1. **La API del motor exige `?tenantId=tenant_1` en la URL** (aunque no haya multitenencia): sin él, 403. Para iniciar por `processDefinitionKey` va además en el body.
+2. **Un proceso desplegado con la API del motor no se puede iniciar con la API pública** (`POST /enterprise/process-instances` → 403). La pública sólo trabaja con procesos **publicados en una app**. Flujo por API, igual que el App Designer:
+   ```
+   POST /api/enterprise/process-models/import          (multipart, file=proceso.bpmn20.xml)  -> modelo de proceso
+   POST /api/enterprise/models          {"name":"Mi App","modelType":3}                      -> modelo de app ("key" da 400)
+   PUT  /api/enterprise/app-definitions/{appModelId}
+        {"appDefinition":{"name":"Mi App","definition":{"models":[{"id":<modeloProceso>}],
+         "theme":"theme-1","icon":"glyphicon-asterisk"}},"publish":true}                     -> publica y despliega
+   ```
+   Para limpiar: `DELETE /api/enterprise/models/{appModelId}?cascade=true&deleteRuntimeApp=true` y `DELETE /api/enterprise/models/{modeloProceso}?cascade=true` (sin `cascade` el modelo de proceso puede quedar).
+3. **Paginación distinta:** en la pública `start` es el **número de página** (`size=2,start=1` → filas 3-4); en la del motor es el **desplazamiento** (`size=2,start=1` → filas 2-3). En la del motor `size` vale 10 por defecto, en la pública 25.
+4. En la API del motor un recurso que no existe (o de otra persona) responde **403**, no 404.
+5. `POST /enterprise/process-instances/query` no acepta `processDefinitionKey` (400): usa `processDefinitionId`.
+6. ⚠ **Tareas históricas con variables (bug en PostgreSQL):** `includeProcessVariables` / `includeTaskLocalVariables` dan **HTTP 500** (`missing FROM-clause entry for table "var"`):
+   - en la pública (`/enterprise/historic-tasks/query`) cuando la página sale llena (`size` ≤ total) o `start` > 0;
+   - en la del motor (`/query/historic-task-instances`, `/history/historic-task-instances`), siempre.
+
+   Subir los `query.*.limit` no lo arregla. **Workaround:** consulta las tareas sin `include...` y lee las variables con `GET /api/history/historic-variable-instances?tenantId=tenant_1&processInstanceId=<id>` (o `taskId=<id>`).
+
+Salida del recorrido:
+
+```
+1. ¿Pública o motor? Se distingue por la URL
+  OK    pública: GET /api/enterprise/app-version -> 200
+  OK    motor:   GET /api/management/engine -> 200
+2. La API del motor exige ?tenantId en la URL
+  OK    sin tenantId -> 403
+  OK    con tenantId -> 200
+3a. Publicar como app (import modelo -> app -> publish); desplegar con la API del motor NO sirve para la pública
+  OK    app publicada -> procesoApi:1:30183
+3b. Ciclo completo con la API pública
+  OK    POST /enterprise/process-instances x3 -> ['30184', '30201', '30218']
+  OK    GET .../variables -> [{'name': 'monto', 'type': 'integer', 'value': 100, 'scope': 'global'}, ...]
+  OK    historic-process-instances finished=true -> total=3
+4. Paginación: en la pública start = nº de PÁGINA; en la del motor start = DESPLAZAMIENTO
+  OK    pública size=2 start=1 -> 1 fila (página 2 de 2)
+  OK    motor   size=2 start=1 -> 2 filas (desde la 2.ª)
+5. Tareas históricas con variables (bug PostgreSQL): falla si la página sale llena
+  info  pública size=2 (llena) -> 500 | pública size=25 (sobra) -> 200 | motor -> 500
+  OK    con la página holgada la pública responde 200
+  OK    workaround: sin include y paginando -> 200
+  OK    workaround: variables aparte con /history/historic-variable-instances
+6. Usuario SIN capacidades: puede usar la pública, no la del motor
+  OK    pública GET /enterprise/profile -> 200
+  OK    motor GET /repository/process-definitions -> 403 (necesita tenant-admin o tenant-admin-api)
+Todo OK
+```
+
+### Capacidades (Identity Management → Capacidades)
+
+| Capacidad | API pública | API del motor |
+|---|---|---|
+| ninguna | ✅ perfil, apps, sus procesos y tareas, su historial | ❌ 403 |
+| *Administración de tenencias* (`tenant-admin`) | ✅ ve **todo** el tenant + `/enterprise/admin/*` | ✅ |
+| *Acceder a la API REST* (`tenant-admin-api`) | sin efecto | ✅ |
+| *Acceder a todos los modelos* (`access-all-models-in-tenant`) | leer modelos de otros | sin efecto |
+| resto (analytics, App Designer, publicar app, licencia) | sólo UI | sin efecto |
+
+Incluso con *tenant-admin*, la API del motor bloquea algunos endpoints (403 fijo): imagen del diagrama, contenido binario de variables, `POST runtime/tasks`, `management/properties`, `identity/*`, `form/*`, `management/tables`.
+
 ## CORS 
 Las soluciones que utilizan las API REST de Process Services pueden estar en un dominio o puerto diferente. Esto se conoce como uso compartido de recursos de origen cruzado (CORS).De manera predeterminada, CORS no puede proporcionar un alto nivel de seguridad. Esto se puede aliviar mediante el uso de servidores proxy web que consoliden diferentes dominios y puertos o habilitando CORS en la configuración de Process Services.
 
@@ -753,7 +833,7 @@ Por ejemplo, la obtención de definiciones de procesos se describe como un HTTP 
 <your-server-and-context-root>/api/repository/process-definitions
 ```
 
-> **Nota**: Puede controlar el acceso a la API de Engine mediante la capacidad “Acceder a la API REST de Activiti” (Administración de identidades > Capacidades). Esto coincide con la API de Activiti Engine (Java), que es independiente de los permisos de usuario. Esto significa que al llamar a cualquiera de las operaciones, el identificador del inquilino siempre debe proporcionarse en la URL, incluso si el sistema no tiene multitenencia (siempre habrá un inquilino en ese caso): por ejemplo, ``<your-server-and-context-root>/api/repository/process-definitions?tenantId=tenant_1``.
+> **Nota**: Puede controlar el acceso a la API de Engine mediante la capacidad “Acceder a la API REST de Activiti” (Administración de identidades > Capacidades). **Comprobado:** también da acceso *Administración de tenencias* (`tenant-admin`); cualquier otro usuario recibe 403 (ver [Capacidades](#capacidades-identity-management--capacidades)). Esto coincide con la API de Activiti Engine (Java), que es independiente de los permisos de usuario. Esto significa que al llamar a cualquiera de las operaciones, el identificador del inquilino siempre debe proporcionarse en la URL, incluso si el sistema no tiene multitenencia (siempre habrá un inquilino en ese caso): por ejemplo, ``<your-server-and-context-root>/api/repository/process-definitions?tenantId=tenant_1``.
 
 
 ## Historic processes and tasks
@@ -820,7 +900,7 @@ Ejemplo de respuesta:
 Donde:
 
 - `size` es el tamaño de la página o el número de elementos por página. Por defecto, el valor es 25.
-- `start` es la página en la que comenzar. Las páginas se cuentan de 0 a N. Por defecto, el valor es 0, lo que significa que 0 será la primera página.
+- `start` es la página en la que comenzar (**comprobado**: es nº de página, no desplazamiento como en la API del motor). Las páginas se cuentan de 0 a N. Por defecto, el valor es 0, lo que significa que 0 será la primera página.
 
 Parámetros de solicitud:
 

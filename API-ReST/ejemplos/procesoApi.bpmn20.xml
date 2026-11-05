@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Proceso mínimo para recorrer la API: inicio -> tarea asignada al iniciador -> fin. -->
+<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL"
+             xmlns:activiti="http://activiti.org/bpmn"
+             targetNamespace="http://training.aps/api">
+  <process id="procesoApi" name="Proceso para la capacitación de API" isExecutable="true">
+    <startEvent id="inicio" activiti:initiator="initiator"/>
+    <sequenceFlow id="f1" sourceRef="inicio" targetRef="aprobar"/>
+    <userTask id="aprobar" name="Aprobar" activiti:assignee="${initiator}"/>
+    <sequenceFlow id="f2" sourceRef="aprobar" targetRef="fin"/>
+    <endEvent id="fin"/>
+  </process>
+</definitions>
