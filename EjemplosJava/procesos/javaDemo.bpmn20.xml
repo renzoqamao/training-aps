@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Procesos que usan las clases de EjemplosJava (requiere training-aps-ejemplos.jar en WEB-INF/lib). -->
+<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL"
+             xmlns:activiti="http://activiti.org/bpmn"
+             targetNamespace="http://training.aps/java">
+  <message id="msgPago" name="pagoRecibido"/>
+  <signal id="sigAlerta" name="alertaGlobal"/>
+
+  <!-- 1) Service tasks (class, expression, delegateExpression) y listeners Java -->
+  <process id="javaDemo" name="Demo de clases Java" isExecutable="true">
+    <extensionElements>
+      <activiti:executionListener event="start" class="com.training.aps.listener.InicioExecutionListener"/>
+    </extensionElements>
+    <startEvent id="inicio" activiti:initiator="initiator"/>
+    <sequenceFlow id="f1" sourceRef="inicio" targetRef="calcular"/>
+
+    <serviceTask id="calcular" name="Calcular total" activiti:class="com.training.aps.delegate.CalcularTotalDelegate">
+      <extensionElements>
+        <activiti:field name="tasa" stringValue="0.18"/>
+        <activiti:field name="variableSalida" stringValue="total"/>
+        <activiti:executionListener event="start" class="com.training.aps.listener.InicioExecutionListener"/>
+        <activiti:executionListener event="end" class="com.training.aps.listener.InicioExecutionListener"/>
+      </extensionElements>
+    </serviceTask>
+    <sequenceFlow id="f2" sourceRef="calcular" targetRef="clasificar"/>
+
+    <serviceTask id="clasificar" name="Clasificar cliente"
+                 activiti:expression="${clienteService.categoria(total)}" activiti:resultVariable="categoria"/>
+    <sequenceFlow id="f3" sourceRef="clasificar" targetRef="auditar"/>
+
+    <serviceTask id="auditar" name="Auditar" activiti:delegateExpression="${auditoriaDelegate}"/>
+    <sequenceFlow id="f4" sourceRef="auditar" targetRef="revisar"/>
+
+    <userTask id="revisar" name="Revisar pedido" activiti:assignee="${initiator}">
+      <extensionElements>
+        <activiti:taskListener event="create" class="com.training.aps.listener.PrioridadTaskListener"/>
+      </extensionElements>
+    </userTask>
+    <sequenceFlow id="f5" sourceRef="revisar" targetRef="fin"/>
+    <endEvent id="fin"/>
+  </process>
+
+  <!-- 2) Pedido que espera un mensaje y se cancela con una señal -->
+  <process id="pedidoJava" name="Pedido (Java)" isExecutable="true">
+    <startEvent id="p0" activiti:initiator="initiator"/>
+    <sequenceFlow id="p1" sourceRef="p0" targetRef="esperarPago"/>
+    <intermediateCatchEvent id="esperarPago"><messageEventDefinition messageRef="msgPago"/></intermediateCatchEvent>
+    <sequenceFlow id="p2" sourceRef="esperarPago" targetRef="despachar"/>
+    <userTask id="despachar" name="Despachar" activiti:assignee="${initiator}"/>
+    <boundaryEvent id="porAlerta" attachedToRef="despachar" cancelActivity="true"><signalEventDefinition signalRef="sigAlerta"/></boundaryEvent>
+    <sequenceFlow id="p3" sourceRef="despachar" targetRef="finOk"/>
+    <sequenceFlow id="p4" sourceRef="porAlerta" targetRef="finCancelado"/>
+    <endEvent id="finOk"/>
+    <endEvent id="finCancelado"/>
+  </process>
+
+  <!-- 3) Proceso que entrega el mensaje desde Java -->
+  <process id="pagadorJava" name="Pagador (Java)" isExecutable="true">
+    <startEvent id="q0"/>
+    <sequenceFlow id="q1" sourceRef="q0" targetRef="pagar"/>
+    <serviceTask id="pagar" name="Notificar pago"
+                 activiti:expression="${mensajeriaBean.notificarPago(pedidoId, importe)}" activiti:resultVariable="entregado"/>
+    <sequenceFlow id="q2" sourceRef="pagar" targetRef="q3"/>
+    <endEvent id="q3"/>
+  </process>
+
+  <!-- 4) Proceso que difunde la señal desde Java (al tenant de la propia ejecución) -->
+  <process id="alertadorJava" name="Alertador (Java)" isExecutable="true">
+    <startEvent id="r0"/>
+    <sequenceFlow id="r1" sourceRef="r0" targetRef="alertar"/>
+    <serviceTask id="alertar" name="Alertar" activiti:expression="${mensajeriaBean.alertar(execution.tenantId)}"/>
+    <sequenceFlow id="r2" sourceRef="alertar" targetRef="r3"/>
+    <endEvent id="r3"/>
+  </process>
+</definitions>

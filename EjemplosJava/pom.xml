@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>com.training.aps</groupId>
+  <artifactId>training-aps-ejemplos</artifactId>
+  <version>1.0.0</version>
+  <packaging>jar</packaging>
+  <name>Ejemplos Java de la capacitación APS</name>
+
+  <properties>
+    <maven.compiler.release>17</maven.compiler.release>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <!-- Debe coincidir con la versión de APS donde se despliega el jar -->
+    <suite.version>24.4.0</suite.version>
+  </properties>
+
+  <dependencies>
+    <!-- provided: APS ya trae estas clases (motor, servicios, Spring); el jar sólo lleva nuestro código -->
+    <dependency>
+      <groupId>com.activiti</groupId>
+      <artifactId>activiti-app-logic</artifactId>
+      <version>${suite.version}</version>
+      <scope>provided</scope>
+      <exclusions>
+        <exclusion><groupId>org.apache.commons</groupId><artifactId>commons-email2-core</artifactId></exclusion>
+        <exclusion><groupId>org.apache.commons</groupId><artifactId>commons-email2-jakarta</artifactId></exclusion>
+      </exclusions>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <finalName>${project.artifactId}</finalName>
+  </build>
+
+  <!-- Los artefactos com.activiti están en el Nexus enterprise de Alfresco (requiere credenciales en settings.xml,
+       ver ConfigurationMavenProject/mavenProject.md). Si ya están en ~/.m2 se puede compilar con: mvn -o package -->
+  <repositories>
+    <repository>
+      <id>activiti-enterprise-releases</id>
+      <url>https://artifacts.alfresco.com/nexus/repository/activiti-enterprise-releases</url>
+    </repository>
+  </repositories>
+</project>

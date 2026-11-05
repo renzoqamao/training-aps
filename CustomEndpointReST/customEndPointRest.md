@@ -598,3 +598,37 @@ Consultamos el siguiente A traves del postman, navegador etc.
 ```cmd
 http://localhost:9090/activiti-app/api/enterprise/public/secure-data
 ```
+
+
+# Ejemplo probado en APS 24.4
+
+[`CapacitacionApiEndpoint`](../EjemplosJava/README.md#capacitacionapiendpoint) (proyecto [`EjemplosJava`](../EjemplosJava/README.md)) añade a la **API pública** el endpoint `GET /activiti-app/api/enterprise/capacitacion/resumen/{processDefinitionKey}`:
+
+```java
+package com.activiti.extension.api;
+
+@RestController
+@RequestMapping("/enterprise/capacitacion")
+public class CapacitacionApiEndpoint {
+
+    @Autowired
+    private HistoryService historyService;
+
+    @GetMapping("/resumen/{key}")
+    public Map<String, Object> resumen(@PathVariable("key") String key) {
+        User u = SecurityUtils.getCurrentUserObject();
+        long abiertas = historyService.createHistoricProcessInstanceQuery().processDefinitionKey(key).unfinished().count();
+        long cerradas = historyService.createHistoricProcessInstanceQuery().processDefinitionKey(key).finished().count();
+        return Map.of("usuario", u.getEmail(), "proceso", key, "enCurso", abiertas, "terminadas", cerradas);
+    }
+}
+```
+
+```bash
+curl -u "$APS_USER:$APS_PASS" "$APS_BASE/api/enterprise/capacitacion/resumen/javaDemo"
+# {"enCurso":0,"usuario":"admin@app.activiti.com","terminadas":2,"proceso":"javaDemo"}
+```
+
+- Paquete `com.activiti.extension.api` → servido bajo `/activiti-app/api/` con autenticación básica.
+- Para compilar basta `activiti-app-logic` (`provided`); `@RestController` y `SecurityUtils` llegan como dependencias transitivas.
+- Despliegue: el jar en `WEB-INF/lib` y reiniciar (ver [EjemplosJava](../EjemplosJava/README.md#compilar-y-desplegar)).
