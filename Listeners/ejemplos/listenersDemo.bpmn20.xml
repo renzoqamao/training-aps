@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Ejemplo de listeners SIN código Java: script (groovy/javascript) y expresiones.
+     Cada listener deja una variable para poder comprobar que se ejecutó (ver probar.py). -->
+<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL"
+             xmlns:activiti="http://activiti.org/bpmn"
+             targetNamespace="http://training.aps/listeners">
+  <process id="listenersDemo" name="Demo de listeners" isExecutable="true">
+    <extensionElements>
+      <!-- Execution listener del PROCESO, evento start, en groovy -->
+      <activiti:executionListener event="start" class="org.activiti.engine.impl.bpmn.listener.ScriptExecutionListener">
+        <activiti:field name="language"><activiti:string>groovy</activiti:string></activiti:field>
+        <activiti:field name="script"><activiti:string><![CDATA[
+          execution.setVariable('inicio', 'groovy: ' + execution.eventName)
+          execution.setVariable('fin', 'pendiente')  // se crea aquí: el listener end sólo la ACTUALIZA
+        ]]></activiti:string></activiti:field>
+      </activiti:executionListener>
+      <!-- Execution listener del PROCESO, evento end, con una expresión.
+           ⚠ Sólo actualiza 'fin' (creada en start). CREAR una variable nueva aquí da 500 en PostgreSQL:
+           violates foreign key constraint "act_fk_var_exe" (la ejecución se borra en la misma transacción). -->
+      <activiti:executionListener event="end" expression="${execution.setVariable('fin', 'expresion: end')}"/>
+    </extensionElements>
+
+    <startEvent id="inicio" activiti:initiator="initiator"/>
+
+    <sequenceFlow id="flujo1" sourceRef="inicio" targetRef="revisar">
+      <extensionElements>
+        <!-- En un flujo de secuencia el único evento es take -->
+        <activiti:executionListener event="take" expression="${execution.setVariable('flujoTomado', true)}"/>
+      </extensionElements>
+    </sequenceFlow>
+
+    <userTask id="revisar" name="Revisar solicitud" activiti:assignee="${initiator}">
+      <extensionElements>
+        <!-- Task listener create en javascript: cambia la prioridad y deja una variable local de la tarea -->
+        <activiti:taskListener event="create" class="org.activiti.engine.impl.bpmn.listener.ScriptTaskListener">
+          <activiti:field name="language"><activiti:string>javascript</activiti:string></activiti:field>
+          <activiti:field name="script"><activiti:string><![CDATA[
+            task.setPriority(80);
+            task.setVariableLocal('creadaPor', 'javascript: ' + task.eventName);
+          ]]></activiti:string></activiti:field>
+        </activiti:taskListener>
+        <!-- Task listener complete con expresión: copia a nivel de proceso la decisión tomada en la tarea -->
+        <activiti:taskListener event="complete" expression="${execution.setVariable('decisionFinal', decision)}"/>
+      </extensionElements>
+    </userTask>
+
+    <sequenceFlow id="flujo2" sourceRef="revisar" targetRef="fin"/>
+    <endEvent id="fin"/>
+  </process>
+</definitions>

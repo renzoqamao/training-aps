@@ -339,3 +339,33 @@ Esto te permite decidir si los errores en la lógica del listener deben afectar 
     - Tareas de Servicio: Ejecutan lógica automatizada, como llamar a un servicio web o ejecutar una clase Java.
     - Eventos: Marcan puntos significativos en el proceso, como el inicio o fin del mismo, o eventos intermedios que manejan interrupciones o demoras.
     - Puertas de Enlace (Gateways): Controlan el flujo del proceso, determinando caminos divergentes o convergentes basados en condiciones definidas.
+
+
+## Ejemplos probados en APS 24.4
+
+[`ejemplos/listenersDemo.bpmn20.xml`](./ejemplos/listenersDemo.bpmn20.xml) usa listeners **sin código Java** y [`ejemplos/probar.py`](./ejemplos/probar.py) comprueba que cada uno se ejecutó:
+
+| Listener | Tipo | Resultado comprobado |
+|---|---|---|
+| proceso `start` | `ScriptExecutionListener` (groovy) | variable `inicio = "groovy: start"` |
+| flujo `take` | expresión `${execution.setVariable('flujoTomado', true)}` | `flujoTomado = true` |
+| tarea `create` | `ScriptTaskListener` (javascript) | prioridad 80 + variable **local** `creadaPor` |
+| tarea `complete` | expresión `${execution.setVariable('decisionFinal', decision)}` | copia la decisión al proceso |
+| proceso `end` | expresión | actualiza `fin` |
+
+Las versiones Java (`ExecutionListener`, `TaskListener`) están en [`EjemplosJava`](../EjemplosJava/README.md#inicioexecutionlistener).
+
+### Lo comprobado
+
+- ⚠ **No crees variables nuevas en el listener `end` del proceso.** En PostgreSQL da HTTP 500 al completar la última tarea: `violates foreign key constraint "act_fk_var_exe" on table "act_ru_variable"` (la ejecución se borra en la misma transacción). Crea la variable antes (p. ej. en `start`) y en `end` sólo actualízala.
+- En los listeners del **proceso**, `execution.getCurrentActivityId()` es `null`.
+- Con `el.whitelisting.enabled=true` (valor por defecto del producto) las expresiones `${execution.setVariable(...)}` fallan con `Unknown method used in expression` hasta añadir a `call-whitelist.conf`:
+  ```properties
+  org.activiti.engine.delegate.DelegateExecution.*
+  org.activiti.engine.delegate.DelegateTask.*
+  ```
+  Los listeners de **script** (groovy/javascript) no pasan por esa lista: dependen de `whitelisted-scripts.conf`.
+
+```bash
+cd Listeners/ejemplos && APS_USER=... APS_PASS=... python probar.py
+```
