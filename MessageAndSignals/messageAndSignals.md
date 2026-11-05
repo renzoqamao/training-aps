@@ -63,6 +63,8 @@ La API pública (`/api/enterprise`) **no** tiene endpoints de mensajes ni señal
 
 ## Ejemplos probados en APS 24.4
 
+> **Cómo desplegar estos BPMN a mano** (curl o App Designer) y qué necesita cada uno: [README → Cómo poner en funcionamiento un `.bpmn20.xml`](../README.md#cómo-poner-en-funcionamiento-un-bpmn20xml).
+
 **Por API REST** — [`ejemplos/mensajesSenales.bpmn20.xml`](./ejemplos/mensajesSenales.bpmn20.xml) + [`ejemplos/probar.py`](./ejemplos/probar.py):
 
 ```

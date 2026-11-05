@@ -35,6 +35,8 @@ APS hace *component scan* de `com.activiti.extension.bean`, `com.activiti.extens
 
 ## Compilar y desplegar
 
+> **Cómo desplegar estos BPMN a mano** (curl o App Designer) y qué necesita cada uno: [README → Cómo poner en funcionamiento un `.bpmn20.xml`](../README.md#cómo-poner-en-funcionamiento-un-bpmn20xml).
+
 ```bash
 cd EjemplosJava
 mvn package            # o mvn -o package si las dependencias ya están en ~/.m2

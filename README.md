@@ -63,6 +63,79 @@ cd Listeners/ejemplos && python probar.py
 
 Los BPMN de `ejemplos/` no traen la parte gráfica (BPMNDI): están pensados para desplegarse por API.
 
+## Cómo poner en funcionamiento un `.bpmn20.xml`
+
+Hay tres formas. Las tres se probaron en APS 24.4.0.
+
+| Forma | Queda desplegado | Se inicia desde la UI / API pública | Permiso necesario |
+|---|---|---|---|
+| A. `probar.py` | no (lo borra al terminar) | no | *tenant-admin* o *tenant-admin-api* |
+| B. API del motor (curl) | sí | **no**: sólo con la API del motor | *tenant-admin* o *tenant-admin-api* |
+| C. App Designer (importar + app + publicar) | sí | **sí** | acceso al App Designer |
+
+### A. Automático con `probar.py`
+
+Despliega, ejecuta las comprobaciones y borra el despliegue (ver [Ejemplos ejecutables](#ejemplos-ejecutables)). Es la forma más rápida de ver que funciona.
+
+### B. Desplegar con la API del motor (curl)
+
+```bash
+export APS_USER=admin@app.activiti.com APS_PASS=<clave> APS_BASE=http://<servidor>:<puerto>/activiti-app
+B=$APS_BASE/api
+
+# 1. Desplegar (tenantId en la URL es obligatorio)
+curl -u "$APS_USER:$APS_PASS" -F "file=@Listeners/ejemplos/listenersDemo.bpmn20.xml" \
+     "$B/repository/deployments?tenantId=tenant_1"
+# -> {"id":"40782","name":"listenersDemo.bpmn20.xml","tenantId":"tenant_1",...}
+
+# 2. Iniciar por clave (el id del <process>), con variables si las necesita
+curl -u "$APS_USER:$APS_PASS" -H "Content-Type: application/json" \
+     -d '{"processDefinitionKey":"listenersDemo","tenantId":"tenant_1","variables":[{"name":"decision","value":"aprobado"}]}' \
+     "$B/runtime/process-instances?tenantId=tenant_1"
+
+# 3. Ver sus tareas / completar una
+curl -u "$APS_USER:$APS_PASS" "$B/runtime/tasks?tenantId=tenant_1&processInstanceId=<id>"
+curl -u "$APS_USER:$APS_PASS" -H "Content-Type: application/json" -d '{"action":"complete"}' "$B/runtime/tasks/<taskId>"
+
+# 4. Quitarlo (cascade=true borra también instancias e historial)
+curl -u "$APS_USER:$APS_PASS" "$B/repository/deployments?tenantId=tenant_1&name=listenersDemo.bpmn20.xml"
+curl -u "$APS_USER:$APS_PASS" -X DELETE "$B/repository/deployments/<deploymentId>?cascade=true"
+```
+
+> Un proceso desplegado así **no aparece en ninguna app** y la API pública no lo puede iniciar (`POST /api/enterprise/process-instances` → 403). Sirve para pruebas y para procesos que se lanzan desde sistemas externos con la API del motor.
+
+En Windows usa Git Bash, o en PowerShell `curl.exe` en lugar de `curl`.
+
+### C. Importar en el App Designer y publicar en una app
+
+Es lo que se hace en un entorno real. Los usuarios inician el proceso desde la app.
+
+1. **App Designer → Procesos → Importar proceso** y elige el `.bpmn20.xml`. Los ejemplos no traen la parte gráfica (BPMNDI); APS coloca los elementos automáticamente al importar. **Comprobado:** se conservan los listeners, scripts y expresiones.
+2. **App Designer → Apps → Crear app**, ábrela, en **Editar modelos incluidos** añade el proceso importado y guarda.
+3. **Publicar** la app. Aparece en la página de inicio; el proceso se inicia desde **Iniciar proceso**.
+
+Lo mismo por API (comprobado, lo hace `publish_app()` de [`herramientas/aps.py`](./herramientas/aps.py) y se explica en [API ReST](./API-ReST/apiRest.md#reglas-que-conviene-saber)):
+
+```
+POST /api/enterprise/process-models/import       multipart file=<bpmn>               -> modelo de proceso
+POST /api/enterprise/models                       {"name":"Mi App","modelType":3}      -> modelo de app
+PUT  /api/enterprise/app-definitions/{appId}      {"appDefinition":{"name":"Mi App","definition":{"models":[{"id":<proceso>}],
+                                                   "theme":"theme-1","icon":"glyphicon-asterisk"}},"publish":true}
+```
+
+> ⚠ **Comprobado:** si el archivo tiene **varios** `<process>`, el App Designer importa **sólo el primero**. Para usar los demás por esta vía, sepáralos en archivos distintos (o usa la forma B, que despliega todos).
+
+### Requisitos de cada ejemplo
+
+| Archivo | Procesos (clave) | Requisitos antes de iniciarlo |
+|---|---|---|
+| [`API-ReST/ejemplos/procesoApi.bpmn20.xml`](./API-ReST/ejemplos/procesoApi.bpmn20.xml) | `procesoApi` | ninguno |
+| [`Listeners/ejemplos/listenersDemo.bpmn20.xml`](./Listeners/ejemplos/listenersDemo.bpmn20.xml) | `listenersDemo` | variable `decision` al completar la tarea; con `el.whitelisting.enabled=true`, añadir `DelegateExecution.*` y `DelegateTask.*` a `call-whitelist.conf` ([detalle](./Listeners/listeners.md#lo-comprobado)) |
+| [`CustomScriptTask/ejemplos/scriptTaskDemo.bpmn20.xml`](./CustomScriptTask/ejemplos/scriptTaskDemo.bpmn20.xml) | `scriptTaskDemo` | variables `message` (texto) y `usegroovy` (booleano) al iniciar; groovy y javascript en `whitelisted-scripts.conf` |
+| [`ServiceTask/ejemplos/serviceTaskWhitelist.bpmn20.xml`](./ServiceTask/ejemplos/serviceTaskWhitelist.bpmn20.xml) | `serviceTaskPermitido`, `serviceTaskBloqueado`, `serviceTaskExpresion` (3 procesos) | `monto` para `serviceTaskExpresion`; listas blancas según [Service Task](./ServiceTask/serviceTask.md#lo-comprobado-en-aps-244) |
+| [`MessageAndSignals/ejemplos/mensajesSenales.bpmn20.xml`](./MessageAndSignals/ejemplos/mensajesSenales.bpmn20.xml) | `pedidoDemo`, `atenderAlertaDemo`, `solicitudDemo` (3 procesos) | `atenderAlertaDemo` y `solicitudDemo` no se inician a mano: arrancan con la señal / el mensaje ([cómo enviarlos](./MessageAndSignals/messageAndSignals.md#mensaje-vs-señal)) |
+| [`EjemplosJava/procesos/javaDemo.bpmn20.xml`](./EjemplosJava/procesos/javaDemo.bpmn20.xml) | `javaDemo`, `pedidoJava`, `pagadorJava`, `alertadorJava` (4 procesos) | **antes** desplegar `training-aps-ejemplos.jar` y reiniciar ([cómo](./EjemplosJava/README.md#compilar-y-desplegar)); `monto` al iniciar `javaDemo`; `pedidoId` e `importe` en `pagadorJava` |
+
 # Referencias
 
 - [documentación de APS](https://support.hyland.com/r/Alfresco/Alfresco-Process-Services/24.4/Alfresco-Process-Services/Develop)

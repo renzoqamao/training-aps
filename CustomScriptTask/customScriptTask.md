@@ -171,6 +171,8 @@ Agregue los siguientes elementos BPMN al nuevo proceso y conéctelos de la sigui
 
 ## Ejemplo probado en APS 24.4
 
+> **Cómo desplegar estos BPMN a mano** (curl o App Designer) y qué necesita cada uno: [README → Cómo poner en funcionamiento un `.bpmn20.xml`](../README.md#cómo-poner-en-funcionamiento-un-bpmn20xml).
+
 [`ejemplos/scriptTaskDemo.bpmn20.xml`](./ejemplos/scriptTaskDemo.bpmn20.xml) es la versión ejecutable del ejercicio de esta sección: la compuerta elige por `usegroovy` y cada script task deja `sender` y `resultado`.
 
 ```xml

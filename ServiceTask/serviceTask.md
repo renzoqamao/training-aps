@@ -380,6 +380,8 @@ Con `org.activiti.engine.*Service.*` u `org.activiti.engine.history.*Query.*` (l
 
 ## Ejemplos probados
 
+> **Cómo desplegar estos BPMN a mano** (curl o App Designer) y qué necesita cada uno: [README → Cómo poner en funcionamiento un `.bpmn20.xml`](../README.md#cómo-poner-en-funcionamiento-un-bpmn20xml).
+
 | Ejemplo | Qué demuestra |
 |---|---|
 | [`ejemplos/serviceTaskWhitelist.bpmn20.xml`](./ejemplos/serviceTaskWhitelist.bpmn20.xml) + [`probar.py`](./ejemplos/probar.py) | bean permitido (`historyService`), bean bloqueado (`runtimeService`) y expresión sin beans |

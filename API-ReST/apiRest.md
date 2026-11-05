@@ -6,6 +6,8 @@ La API ReST expone las operaciones genéricas de Process Engine. También incluy
 
 ## Lo comprobado en APS 24.4 (léelo primero)
 
+> **Cómo desplegar estos BPMN a mano** (curl o App Designer) y qué necesita cada uno: [README → Cómo poner en funcionamiento un `.bpmn20.xml`](../README.md#cómo-poner-en-funcionamiento-un-bpmn20xml).
+
 Todo lo de esta sección se probó en APS 24.4.0 con [`ejemplos/recorrido.py`](./ejemplos/recorrido.py), que repite cada comprobación y limpia lo que crea:
 
 ```bash
