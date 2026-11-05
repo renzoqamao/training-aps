@@ -38,6 +38,8 @@
 
 14. [Ejemplos Java (delegates, listeners, beans, endpoint REST)](./EjemplosJava/README.md)
 
+15. [Conceptos del motor: definiciones, versiones, instancias y ejecuciones](./ConceptosMotor/conceptosMotor.md)
+
 # Ejemplos ejecutables
 
 Varias secciones incluyen una carpeta `ejemplos/` con procesos BPMN y un script `probar.py` que los despliega, los recorre, **comprueba el resultado** (líneas `OK` / `FALLO`) y limpia lo que creó. Todos se probaron en APS 24.4.0.
@@ -49,6 +51,7 @@ Varias secciones incluyen una carpeta `ejemplos/` con procesos BPMN y un script 
 | Service Task | [`ServiceTask/ejemplos/`](./ServiceTask/ejemplos/) | expresiones con beans y listas blancas |
 | Script Task | [`CustomScriptTask/ejemplos/`](./CustomScriptTask/ejemplos/) | groovy y javascript, `resultVariable` |
 | Mensajes y señales | [`MessageAndSignals/ejemplos/`](./MessageAndSignals/ejemplos/) | mensaje a una ejecución, señal de difusión, inicio por mensaje/señal |
+| Conceptos del motor | [`ConceptosMotor/ejemplos/`](./ConceptosMotor/ejemplos/) | definiciones por despliegue, versiones, iniciar por clave o id, suspender, ejecuciones |
 | Java | [`EjemplosJava/`](./EjemplosJava/README.md) | las 7 clases Java desplegadas en un jar |
 
 **Requisitos:** Python 3 (sin librerías extra; el cliente es [`herramientas/aps.py`](./herramientas/aps.py)) y un APS 24.4.0 de pruebas. **No los ejecutes contra un servidor compartido**: crean y borran despliegues.
@@ -136,6 +139,7 @@ PUT  /api/enterprise/app-definitions/{appId}      {"appDefinition":{"name":"Mi A
 | [`MessageAndSignals/ejemplos/mensajesSenales.bpmn20.xml`](./MessageAndSignals/ejemplos/mensajesSenales.bpmn20.xml) | `pedidoDemo`, `atenderAlertaDemo`, `solicitudDemo` (3 procesos) | `atenderAlertaDemo` y `solicitudDemo` no se inician a mano: arrancan con la señal / el mensaje ([cómo enviarlos](./MessageAndSignals/messageAndSignals.md#mensaje-vs-señal)) |
 | [`MessageAndSignals/ejemplos/solicitudCredito.bpmn20.xml`](./MessageAndSignals/ejemplos/solicitudCredito.bpmn20.xml) | `solicitudCredito` | variables `monto` y `plazo` al iniciar; se cancela con el mensaje `retiroSolicitud` y recalcula con la señal `cambioTasa` |
 | [`MessageAndSignals/ejemplos/anuncioCambioTasa.bpmn20.xml`](./MessageAndSignals/ejemplos/anuncioCambioTasa.bpmn20.xml) | `anuncioCambioTasa` | ninguno: al iniciarlo lanza la señal `cambioTasa` |
+| [`ConceptosMotor/ejemplos/ejecuciones.bpmn20.xml`](./ConceptosMotor/ejemplos/ejecuciones.bpmn20.xml) | `ejSecuencial`, `ejParalelo`, `ejLimite` (3 procesos) | ninguno |
 | [`EjemplosJava/procesos/javaDemo.bpmn20.xml`](./EjemplosJava/procesos/javaDemo.bpmn20.xml) | `javaDemo`, `pedidoJava`, `pagadorJava`, `alertadorJava` (4 procesos) | **antes** desplegar `training-aps-ejemplos.jar` y reiniciar ([cómo](./EjemplosJava/README.md#compilar-y-desplegar)); `monto` al iniciar `javaDemo`; `pedidoId` e `importe` en `pagadorJava` |
 
 # Referencias

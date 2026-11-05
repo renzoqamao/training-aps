@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Tres procesos para ver cuántas EJECUCIONES tiene una instancia y cómo se versionan las DEFINICIONES.
+     Un despliegue de este archivo crea 3 definiciones (una por <process>). Los id de elemento son únicos en todo el archivo. -->
+<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL"
+             targetNamespace="http://training.aps/conceptos">
+  <signal id="sgAviso" name="avisoConceptos"/>
+
+  <!-- inicio -> Tarea A -> fin : raíz + 1 hija -->
+  <process id="ejSecuencial" name="Secuencial" isExecutable="true">
+    <startEvent id="sInicio"/>
+    <sequenceFlow id="sF1" sourceRef="sInicio" targetRef="sTareaA"/>
+    <userTask id="sTareaA" name="Tarea A"/>
+    <sequenceFlow id="sF2" sourceRef="sTareaA" targetRef="sFin"/>
+    <endEvent id="sFin"/>
+  </process>
+
+  <!-- compuerta paralela -> Tarea A y Tarea B : raíz + 2 hijas -->
+  <process id="ejParalelo" name="Paralelo" isExecutable="true">
+    <startEvent id="pInicio"/>
+    <sequenceFlow id="pF1" sourceRef="pInicio" targetRef="pAbrir"/>
+    <parallelGateway id="pAbrir"/>
+    <sequenceFlow id="pF2" sourceRef="pAbrir" targetRef="pTareaA"/>
+    <sequenceFlow id="pF3" sourceRef="pAbrir" targetRef="pTareaB"/>
+    <userTask id="pTareaA" name="Tarea A"/>
+    <userTask id="pTareaB" name="Tarea B"/>
+    <sequenceFlow id="pF4" sourceRef="pTareaA" targetRef="pCerrar"/>
+    <sequenceFlow id="pF5" sourceRef="pTareaB" targetRef="pCerrar"/>
+    <parallelGateway id="pCerrar"/>
+    <sequenceFlow id="pF6" sourceRef="pCerrar" targetRef="pFin"/>
+    <endEvent id="pFin"/>
+  </process>
+
+  <!-- Tarea A con evento de límite no interrumpidor : raíz + hija en la tarea + hija en el evento -->
+  <process id="ejLimite" name="Con evento de límite" isExecutable="true">
+    <startEvent id="lInicio"/>
+    <sequenceFlow id="lF1" sourceRef="lInicio" targetRef="lTareaA"/>
+    <userTask id="lTareaA" name="Tarea A"/>
+    <boundaryEvent id="lAviso" attachedToRef="lTareaA" cancelActivity="false">
+      <signalEventDefinition signalRef="sgAviso"/>
+    </boundaryEvent>
+    <sequenceFlow id="lF2" sourceRef="lTareaA" targetRef="lFin"/>
+    <sequenceFlow id="lF3" sourceRef="lAviso" targetRef="lFinAviso"/>
+    <endEvent id="lFin"/>
+    <endEvent id="lFinAviso"/>
+  </process>
+</definitions>
