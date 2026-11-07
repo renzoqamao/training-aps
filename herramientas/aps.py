@@ -80,7 +80,7 @@ def unpublish_app(app_name):
                     undeploy(d['id'])
     for m in call('GET', 'enterprise/models?filter=myApps&modelType=3')[1]['data']:
         if m['name'] == app_name:
-            procs = call('GET', f"enterprise/app-definitions/{m['id']}")[1]['definition']['models']
+            procs = call('GET', f"enterprise/app-definitions/{m['id']}")[1]['definition'].get('models', [])  # una app a medio crear no tiene models
             call('DELETE', f"enterprise/models/{m['id']}?cascade=true&deleteRuntimeApp=true")
             for p in procs:  # sin cascade=true el modelo de proceso puede quedar (probado)
                 call('DELETE', f"enterprise/models/{p['id']}?cascade=true")
