@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Event listeners del proceso SIN código Java: "Reiniciar evento" (throwEvent) y "Tipo de entidad" (entityType).
+     Cada camino deja una variable para comprobar qué se disparó (ver probarEventListeners.py). -->
+<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL"
+             xmlns:activiti="http://activiti.org/bpmn"
+             targetNamespace="http://training.aps/listeners">
+  <signal id="sTerminada" name="tareaTerminada"/>
+  <signal id="sNunca" name="nuncaLlega"/>
+
+  <process id="eventListenersDemo" name="Demo de event listeners" isExecutable="true">
+    <extensionElements>
+      <!-- 1. Reiniciar evento como SEÑAL: al completarse cualquier tarea, lanza la señal "tareaTerminada" -->
+      <activiti:eventListener events="TASK_COMPLETED" entityType="task" throwEvent="signal" signalName="tareaTerminada"/>
+      <!-- 2. Tipo de entidad mal elegido: ACTIVITY_STARTED no es un evento de entidad, así que con entityType nunca llega -->
+      <activiti:eventListener events="ACTIVITY_STARTED" entityType="task" throwEvent="signal" signalName="nuncaLlega"/>
+    </extensionElements>
+
+    <startEvent id="inicio"/>
+    <sequenceFlow id="f1" sourceRef="inicio" targetRef="bifurcar"/>
+    <parallelGateway id="bifurcar"/>
+    <sequenceFlow id="f2" sourceRef="bifurcar" targetRef="trabajar"/>
+    <sequenceFlow id="f3" sourceRef="bifurcar" targetRef="esperarSenal"/>
+
+    <userTask id="trabajar" name="Trabajar"/>
+    <boundaryEvent id="nunca" attachedToRef="trabajar" cancelActivity="false"><signalEventDefinition signalRef="sNunca"/></boundaryEvent>
+    <sequenceFlow id="f4" sourceRef="nunca" targetRef="marcarNunca"/>
+    <serviceTask id="marcarNunca" name="Marcar señal que no debía llegar" activiti:expression="${true}" activiti:resultVariable="senalNunca"/>
+    <sequenceFlow id="f5" sourceRef="marcarNunca" targetRef="finNunca"/>
+    <endEvent id="finNunca"/>
+    <sequenceFlow id="f6" sourceRef="trabajar" targetRef="juntar"/>
+
+    <intermediateCatchEvent id="esperarSenal" name="Esperar tareaTerminada"><signalEventDefinition signalRef="sTerminada"/></intermediateCatchEvent>
+    <sequenceFlow id="f7" sourceRef="esperarSenal" targetRef="marcarSenal"/>
+    <serviceTask id="marcarSenal" name="Marcar señal recibida" activiti:expression="${true}" activiti:resultVariable="senalTarea"/>
+    <sequenceFlow id="f8" sourceRef="marcarSenal" targetRef="juntar"/>
+
+    <parallelGateway id="juntar"/>
+    <sequenceFlow id="f9" sourceRef="juntar" targetRef="fin"/>
+    <endEvent id="fin"/>
+  </process>
+
+</definitions>

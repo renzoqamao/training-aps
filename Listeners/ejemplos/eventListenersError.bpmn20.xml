@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Event listener que relanza un evento como ERROR BPMN (ver probarEventListeners.py).
+     Va en su propio archivo: los event listeners se registran en el modelo BPMN del archivo, así que aplicarían
+     también a cualquier otro proceso definido en el mismo .bpmn20.xml. -->
+<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL"
+             xmlns:activiti="http://activiti.org/bpmn"
+             targetNamespace="http://training.aps/listeners">
+  <error id="eSinTareas" errorCode="SIN_TAREAS"/>
+
+  <process id="eventListenersError" name="Demo de event listener que lanza un error" isExecutable="true">
+    <extensionElements>
+      <!-- 3. Reiniciar evento como ERROR BPMN: al crearse una tarea lanza SIN_TAREAS desde su ejecución -->
+      <activiti:eventListener events="TASK_CREATED" entityType="task" throwEvent="error" errorCode="SIN_TAREAS"/>
+    </extensionElements>
+    <startEvent id="eInicio"/>
+    <sequenceFlow id="e1" sourceRef="eInicio" targetRef="revision"/>
+    <subProcess id="revision" name="Revisión">
+      <startEvent id="rInicio"/>
+      <sequenceFlow id="r1" sourceRef="rInicio" targetRef="revisar"/>
+      <userTask id="revisar" name="Revisar"/>
+      <sequenceFlow id="r2" sourceRef="revisar" targetRef="rFin"/>
+      <endEvent id="rFin"/>
+    </subProcess>
+    <boundaryEvent id="capturar" attachedToRef="revision"><errorEventDefinition errorRef="eSinTareas"/></boundaryEvent>
+    <sequenceFlow id="e2" sourceRef="capturar" targetRef="marcarError"/>
+    <serviceTask id="marcarError" name="Marcar error capturado" activiti:expression="${true}" activiti:resultVariable="errorCapturado"/>
+    <sequenceFlow id="e3" sourceRef="marcarError" targetRef="eFin"/>
+    <sequenceFlow id="e4" sourceRef="revision" targetRef="eFin"/>
+    <endEvent id="eFin"/>
+  </process>
+</definitions>
