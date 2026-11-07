@@ -129,7 +129,16 @@ PUT  /api/enterprise/app-definitions/{appId}      {"appDefinition":{"name":"Mi A
                                                    "theme":"theme-1","icon":"glyphicon-asterisk"}},"publish":true}
 ```
 
-> ⚠ **Comprobado:** si el archivo tiene **varios** `<process>`, el App Designer importa **sólo el primero**. Para usar los demás por esta vía, sepáralos en archivos distintos (o usa la forma B, que despliega todos).
+> ⚠ **Un archivo con varios `<process>`** (comprobado con [`ConceptosMotor/ejemplos/probarDosProcesos.py`](./ConceptosMotor/ejemplos/probarDosProcesos.py), detalle en [Conceptos del motor](./ConceptosMotor/conceptosMotor.md#un-archivo-con-varios-process)):
+> - **Forma B** (API del motor): despliega **todos**, una definición por `<process>`, en un solo despliegue.
+> - **Forma C** (App Designer): el modelo importado conserva **sólo el primero**, y la app publica sólo ese. Los demás se pierden sin aviso.
+> - En los dos casos, los **event listeners** de un proceso se aplican también a los otros del mismo archivo.
+>
+> Para el App Designer, usa **un proceso por archivo**.
+
+> ⚠ **Otras dos cosas que cambia o exige la forma C (comprobado):**
+> - Al importar, los event listeners con **¿Reiniciar evento?** pierden el `entityType`. Los de clase y expresión delegada lo conservan.
+> - Para publicar la app, cada tarea de usuario necesita asignado, usuarios candidatos o grupos candidatos. Si falta, la publicación devuelve `User task has no assignment set` y no despliega nada.
 
 ### Requisitos de cada ejemplo
 
@@ -143,6 +152,9 @@ PUT  /api/enterprise/app-definitions/{appId}      {"appDefinition":{"name":"Mi A
 | [`MessageAndSignals/ejemplos/solicitudCredito.bpmn20.xml`](./MessageAndSignals/ejemplos/solicitudCredito.bpmn20.xml) | `solicitudCredito` | variables `monto` y `plazo` al iniciar; se cancela con el mensaje `retiroSolicitud` y recalcula con la señal `cambioTasa` |
 | [`MessageAndSignals/ejemplos/anuncioCambioTasa.bpmn20.xml`](./MessageAndSignals/ejemplos/anuncioCambioTasa.bpmn20.xml) | `anuncioCambioTasa` | ninguno: al iniciarlo lanza la señal `cambioTasa` |
 | [`ConceptosMotor/ejemplos/ejecuciones.bpmn20.xml`](./ConceptosMotor/ejemplos/ejecuciones.bpmn20.xml) | `ejSecuencial`, `ejParalelo`, `ejLimite` (3 procesos) | ninguno |
+| [`ConceptosMotor/ejemplos/dosProcesos.bpmn20.xml`](./ConceptosMotor/ejemplos/dosProcesos.bpmn20.xml) | `dosA`, `dosB` (2 procesos) | ninguno. Por el App Designer sólo entra `dosA` |
+| [`Listeners/ejemplos/eventListenersDemo.bpmn20.xml`](./Listeners/ejemplos/eventListenersDemo.bpmn20.xml) | `eventListenersDemo` | ninguno |
+| [`Listeners/ejemplos/eventListenersError.bpmn20.xml`](./Listeners/ejemplos/eventListenersError.bpmn20.xml) | `eventListenersError` | ninguno: al iniciarlo, el error cancela la tarea y termina |
 | [`EjemplosJava/procesos/javaDemo.bpmn20.xml`](./EjemplosJava/procesos/javaDemo.bpmn20.xml) | `javaDemo`, `pedidoJava`, `pagadorJava`, `alertadorJava` (4 procesos) | **antes** desplegar `training-aps-ejemplos.jar` y reiniciar ([cómo](./EjemplosJava/README.md#compilar-y-desplegar)); `monto` al iniciar `javaDemo`; `pedidoId` e `importe` en `pagadorJava` |
 
 # Referencias
