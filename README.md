@@ -40,6 +40,8 @@
 
 15. [Conceptos del motor: definiciones, versiones, instancias y ejecuciones](./ConceptosMotor/conceptosMotor.md)
 
+16. [Propiedades de actividad: multiinstancia, asíncrona, exclusiva, compensación y user task](./PropiedadesActividad/propiedadesActividad.md)
+
 # Ejemplos ejecutables
 
 Varias secciones incluyen una carpeta `ejemplos/` con procesos BPMN y un script `probar.py` que los despliega, los recorre, **comprueba el resultado** (líneas `OK` / `FALLO`) y limpia lo que creó. Todos se probaron en APS 24.4.0.
@@ -52,6 +54,7 @@ Varias secciones incluyen una carpeta `ejemplos/` con procesos BPMN y un script 
 | Script Task | [`CustomScriptTask/ejemplos/`](./CustomScriptTask/ejemplos/) | groovy y javascript, `resultVariable` |
 | Mensajes y señales | [`MessageAndSignals/ejemplos/`](./MessageAndSignals/ejemplos/) | mensaje a una ejecución, señal de difusión, inicio por mensaje/señal |
 | Conceptos del motor | [`ConceptosMotor/ejemplos/`](./ConceptosMotor/ejemplos/) | definiciones por despliegue, versiones, iniciar por clave o id, suspender, ejecuciones |
+| Propiedades de actividad | [`PropiedadesActividad/ejemplos/`](./PropiedadesActividad/ejemplos/) | multiinstancia (colección, cardinalidad, condición de terminación), asíncrona, dead letter y su reintento, Exclusiva en el editor, compensación, prioridad/categoría/vencimiento, iniciador puede completar y reasignación desactivada |
 | Java | [`EjemplosJava/`](./EjemplosJava/README.md) | las 7 clases Java desplegadas en un jar |
 
 **Requisitos:** Python 3 (sin librerías extra; el cliente es [`herramientas/aps.py`](./herramientas/aps.py)) y un APS 24.4.0 de pruebas. **No los ejecutes contra un servidor compartido**: crean y borran despliegues.

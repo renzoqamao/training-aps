@@ -15,9 +15,11 @@ except KeyError:
     sys.exit('Define APS_USER y APS_PASS (ver README de la capacitación).')
 
 
-def call(method, path, body=None, files=None, ok=(200, 201, 204)):
-    """Devuelve (status, json|texto). Lanza AssertionError si el status no está en `ok` (ok=None: no validar)."""
-    headers, data = {'Authorization': AUTH}, None
+def call(method, path, body=None, files=None, ok=(200, 201, 204), user=None):
+    """Devuelve (status, json|texto). Lanza AssertionError si el status no está en `ok` (ok=None: no validar).
+    user=(email, clave) llama como otro usuario en vez de APS_USER."""
+    auth = AUTH if user is None else 'Basic ' + base64.b64encode(f'{user[0]}:{user[1]}'.encode()).decode()
+    headers, data = {'Authorization': auth}, None
     if files:  # multipart: {'file': (nombre, bytes)}
         b = uuid.uuid4().hex
         name, content = files['file']
@@ -51,16 +53,18 @@ def undeploy(dep_id):
     call('DELETE', f'repository/deployments/{dep_id}?cascade=true')
 
 
-def publish_app(path, app_name):
+def publish_app(path, app_name, share_with=()):
     """Flujo de la API PÚBLICA (como el App Designer): importa el BPMN como modelo, crea una app con él y la publica.
     Sólo los procesos publicados en una app se pueden iniciar con /api/enterprise/process-instances.
+    share_with: ids de usuario con los que se comparte la app (pueden iniciar el proceso con la API pública).
     Devuelve dict con processDefinitionId y los ids necesarios para unpublish_app()."""
     unpublish_app(app_name)  # restos de una ejecución anterior
     with open(path, 'rb') as f:
         mid = call('POST', 'enterprise/process-models/import', files={'file': (os.path.basename(path), f.read())})[1]['id']
     aid = call('POST', 'enterprise/models', {'name': app_name, 'modelType': 3})[1]['id']  # 3 = app; 'key' da 400
     call('PUT', f'enterprise/app-definitions/{aid}', {'appDefinition': {'name': app_name, 'definition': {
-        'models': [{'id': mid}], 'theme': 'theme-1', 'icon': 'glyphicon-asterisk'}}, 'publish': True})
+        'models': [{'id': mid}], 'theme': 'theme-1', 'icon': 'glyphicon-asterisk',
+        'publishIdentityInfo': [{'type': 'user', 'person': {'id': u}} for u in share_with]}}, 'publish': True})
     rt = next(a for a in call('GET', 'enterprise/runtime-app-definitions')[1]['data'] if a.get('name') == app_name)
     pd = call('GET', f"repository/process-definitions?{T}&deploymentId={rt['deploymentId']}")[1]['data'][0]['id']
     return {'processDefinitionId': pd, 'deploymentId': rt['deploymentId']}

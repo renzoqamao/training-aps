@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Propiedades de actividad: multiinstancia, asíncrona/exclusiva, compensación y propiedades de user task.
+     Sin BPMNDI: se despliega por API (ver probar.py). Los nombres de personas y datos son inventados. -->
+<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL"
+             xmlns:activiti="http://activiti.org/bpmn"
+             targetNamespace="http://training-aps/propiedades">
+
+  <!-- 1. Multiinstancia paralela sobre una colección, con condición de terminación -->
+  <process id="propMiParalela" name="Multiinstancia paralela">
+    <startEvent id="mpInicio"/>
+    <sequenceFlow id="mpF0" sourceRef="mpInicio" targetRef="mpLista"/>
+    <!-- la colección debe ser una java.util.Collection: se arma desde un texto "a,b,c" -->
+    <scriptTask id="mpLista" name="Armar lista" scriptFormat="groovy">
+      <script>execution.setVariable('revisores', new ArrayList(revisoresTexto.tokenize(',')))</script>
+    </scriptTask>
+    <sequenceFlow id="mpF1" sourceRef="mpLista" targetRef="mpRevisar"/>
+    <userTask id="mpRevisar" name="Revisar" activiti:assignee="${revisor}">
+      <multiInstanceLoopCharacteristics isSequential="false"
+          activiti:collection="${revisores}" activiti:elementVariable="revisor">
+        <completionCondition>${nrOfCompletedInstances &gt;= 2}</completionCondition>
+      </multiInstanceLoopCharacteristics>
+    </userTask>
+    <sequenceFlow id="mpF2" sourceRef="mpRevisar" targetRef="mpSiguiente"/>
+    <userTask id="mpSiguiente" name="Siguiente paso"/>
+    <sequenceFlow id="mpF3" sourceRef="mpSiguiente" targetRef="mpFin"/>
+    <endEvent id="mpFin"/>
+  </process>
+
+  <!-- 2. Multiinstancia secuencial por cardinalidad; una instancia con voto NO termina el bucle -->
+  <process id="propMiSecuencial" name="Multiinstancia secuencial">
+    <startEvent id="msInicio"/>
+    <sequenceFlow id="msF1" sourceRef="msInicio" targetRef="msVotar"/>
+    <userTask id="msVotar" name="Votar">
+      <extensionElements>
+        <activiti:taskListener event="create" expression="${task.setVariableLocal('vuelta', loopCounter)}"/>
+      </extensionElements>
+      <multiInstanceLoopCharacteristics isSequential="true">
+        <loopCardinality>${3}</loopCardinality>
+        <completionCondition>${voto == 'NO'}</completionCondition>
+      </multiInstanceLoopCharacteristics>
+    </userTask>
+    <sequenceFlow id="msF2" sourceRef="msVotar" targetRef="msFin"/>
+    <endEvent id="msFin"/>
+  </process>
+
+  <!-- 3. Service task asíncrono (exclusivo) que funciona -->
+  <process id="propAsyncOk" name="Asíncrona que funciona">
+    <startEvent id="aoInicio"/>
+    <sequenceFlow id="aoF1" sourceRef="aoInicio" targetRef="aoTarea"/>
+    <serviceTask id="aoTarea" name="Trabajo en segundo plano" activiti:async="true"
+                 activiti:expression="${execution.setVariable('hecho', true)}"/>
+    <sequenceFlow id="aoF2" sourceRef="aoTarea" targetRef="aoFin"/>
+    <endEvent id="aoFin"/>
+  </process>
+
+  <!-- 4. El mismo service task fallando: síncrono y asíncrono -->
+  <process id="propSyncFalla" name="Síncrona que falla">
+    <startEvent id="sfInicio"/>
+    <sequenceFlow id="sfF1" sourceRef="sfInicio" targetRef="sfTarea"/>
+    <serviceTask id="sfTarea" name="Falla" activiti:expression="${beanQueNoExiste.hacer()}"/>
+    <sequenceFlow id="sfF2" sourceRef="sfTarea" targetRef="sfFin"/>
+    <endEvent id="sfFin"/>
+  </process>
+  <process id="propAsyncFalla" name="Asíncrona que falla">
+    <startEvent id="afInicio"/>
+    <sequenceFlow id="afF1" sourceRef="afInicio" targetRef="afTarea"/>
+    <!-- falla mientras la variable falla sea true; así se puede corregir y reintentar el dead letter job -->
+    <serviceTask id="afTarea" name="Falla en segundo plano" activiti:async="true"
+                 activiti:expression="${falla ? beanQueNoExiste.hacer() : execution.setVariable('hecho', true)}"/>
+    <sequenceFlow id="afF2" sourceRef="afTarea" targetRef="afFin"/>
+    <endEvent id="afFin"/>
+  </process>
+
+  <!-- 5. Compensación: "Reservar" tiene un manejador "Anular reserva" que sólo corre si se lanza la compensación -->
+  <process id="propCompensa" name="Compensación">
+    <startEvent id="coInicio"/>
+    <sequenceFlow id="coF1" sourceRef="coInicio" targetRef="coReservar"/>
+    <serviceTask id="coReservar" name="Reservar" activiti:expression="${execution.setVariable('reservado', true)}"/>
+    <boundaryEvent id="coBorde" attachedToRef="coReservar">
+      <compensateEventDefinition/>
+    </boundaryEvent>
+    <serviceTask id="coAnular" name="Anular reserva" isForCompensation="true"
+                 activiti:expression="${execution.setVariable('anulado', true)}"/>
+    <sequenceFlow id="coF2" sourceRef="coReservar" targetRef="coDecidir"/>
+    <exclusiveGateway id="coDecidir" default="coF4"/>
+    <sequenceFlow id="coF3" sourceRef="coDecidir" targetRef="coLanzar">
+      <conditionExpression>${deshacer == true}</conditionExpression>
+    </sequenceFlow>
+    <sequenceFlow id="coF4" sourceRef="coDecidir" targetRef="coFin"/>
+    <intermediateThrowEvent id="coLanzar" name="Deshacer">
+      <compensateEventDefinition/>
+    </intermediateThrowEvent>
+    <sequenceFlow id="coF5" sourceRef="coLanzar" targetRef="coFin"/>
+    <endEvent id="coFin"/>
+    <!-- el esquema BPMN exige las association (artefactos) al final del proceso -->
+    <association id="coAsoc" sourceRef="coBorde" targetRef="coAnular" associationDirection="One"/>
+  </process>
+
+  <!-- 6. Propiedades de user task: prioridad, categoría y fecha de vencimiento -->
+  <process id="propUserTask" name="Propiedades de user task">
+    <startEvent id="utInicio"/>
+    <sequenceFlow id="utF1" sourceRef="utInicio" targetRef="utSinNada"/>
+    <userTask id="utSinNada" name="Sin propiedades"/>
+    <sequenceFlow id="utF2" sourceRef="utSinNada" targetRef="utCon"/>
+    <userTask id="utCon" name="Con propiedades" activiti:priority="${urgencia * 10}"
+              activiti:category="categoriaDemo" activiti:dueDate="P2D"/>
+    <sequenceFlow id="utF3" sourceRef="utCon" targetRef="utFin"/>
+    <endEvent id="utFin"/>
+  </process>
+</definitions>

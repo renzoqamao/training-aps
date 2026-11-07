@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Opciones de APS del diálogo de asignación del user task, como las escribe el editor:
+     modeler:initiator-can-complete y modeler:deactivate-user-task-reassignment.
+     Se publica en una app (API pública) porque esas opciones las aplica la API pública de APS, no el motor. -->
+<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL"
+             xmlns:activiti="http://activiti.org/bpmn"
+             xmlns:modeler="http://activiti.com/modeler"
+             targetNamespace="http://training-aps/propiedades">
+  <process id="propIniciador" name="propIniciador">
+    <startEvent id="inInicio" activiti:initiator="iniciador"/>
+    <sequenceFlow id="inF1" sourceRef="inInicio" targetRef="inConPermiso"/>
+    <userTask id="inConPermiso" name="El iniciador puede completar" activiti:assignee="${asignado}"
+              activiti:category="categoriaDemo">
+      <extensionElements>
+        <modeler:initiator-can-complete><![CDATA[true]]></modeler:initiator-can-complete>
+      </extensionElements>
+    </userTask>
+    <sequenceFlow id="inF2" sourceRef="inConPermiso" targetRef="inSinPermiso"/>
+    <userTask id="inSinPermiso" name="Sin permiso para el iniciador" activiti:assignee="${asignado}"/>
+    <sequenceFlow id="inF3" sourceRef="inSinPermiso" targetRef="inSinReasignar"/>
+    <userTask id="inSinReasignar" name="Reasignación desactivada" activiti:assignee="${asignado}">
+      <extensionElements>
+        <modeler:deactivate-user-task-reassignment><![CDATA[true]]></modeler:deactivate-user-task-reassignment>
+      </extensionElements>
+    </userTask>
+    <sequenceFlow id="inF4" sourceRef="inSinReasignar" targetRef="inFin"/>
+    <endEvent id="inFin"/>
+  </process>
+</definitions>
