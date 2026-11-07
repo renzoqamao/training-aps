@@ -97,6 +97,22 @@ GET /api/runtime/executions?tenantId=tenant_1&processInstanceId=<id>
 - El *business key* está en la raíz y la suscripción al mensaje en una hija: filtrar por los dos a la vez en una sola consulta **no devuelve nada**. Hay que buscar primero la instancia y luego su ejecución (ver [`MensajeriaBean`](../EjemplosJava/README.md#mensajeriabean)).
 - Las variables que se pasan al entregar un mensaje quedan en la **raíz** (nivel de proceso), aunque se entreguen a la hija.
 
+## Un archivo con varios `<process>`
+
+BPMN 2.0 permite varios `<process>` dentro de un `<definitions>`, y el motor de APS los acepta. Lo que pasa depende de cómo se despliegue (comprobado en APS 24.4 con [`ejemplos/dosProcesos.bpmn20.xml`](./ejemplos/dosProcesos.bpmn20.xml) y [`ejemplos/probarDosProcesos.py`](./ejemplos/probarDosProcesos.py)):
+
+| | API del motor (`POST /api/repository/deployments`) | App Designer (importar + app + publicar) |
+|---|---|---|
+| Definiciones creadas | **Todas**: `dosA` y `dosB`, en **un** despliegue | **Sólo la primera** (`dosA`). El modelo importado ya no tiene `dosB`, sin aviso |
+| Se inicia desde la interfaz de APS | No (sólo con la API del motor) | Sí |
+| Event listeners del `<process>` | Se aplican a **todos** los procesos del archivo | Sólo hay un proceso |
+
+**Los event listeners son del archivo, no del proceso.** El motor los registra en el modelo BPMN del archivo. En el ejemplo, `dosB` no tiene listeners, pero el `TASK_CREATED` de `dosA` se ejecuta también al crearse la tarea de `dosB`. Lo comprueba la variable `listenerDeA`. Con un listener que lanza un error, eso rompe el inicio del otro proceso ([caso real](../Listeners/listeners.md#cómo-configurar-un-event-listener-en-el-modelador-detectores-de-eventos)). Los execution y task listeners sí son de cada elemento: no se comparten.
+
+Cuándo usar varios procesos en un archivo:
+- **Sí:** ejemplos y pruebas que se despliegan con la API del motor, o procesos que siempre van juntos (p. ej. un padre y el hijo de su `callActivity`) y no tienen event listeners.
+- **No:** procesos que se modelan y publican en el App Designer. Usa **un proceso por archivo**.
+
 ## Ejecutar el ejemplo
 
 ```bash

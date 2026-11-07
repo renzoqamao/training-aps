@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Un archivo con DOS <process> (ver probarDosProcesos.py):
+     - Desplegado con la API del motor se crean las dos definiciones.
+     - Importado en el App Designer sólo queda el primero.
+     - El event listener de dosA también se aplica a dosB: se registra en el modelo del archivo, no en el proceso. -->
+<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL"
+             xmlns:activiti="http://activiti.org/bpmn"
+             targetNamespace="http://training.aps/conceptos">
+  <signal id="sVista" name="tareaVista"/>
+
+  <process id="dosA" name="Dos procesos: A" isExecutable="true">
+    <extensionElements>
+      <!-- al crearse cualquier tarea, lanza la señal tareaVista en su instancia -->
+      <activiti:eventListener events="TASK_CREATED" entityType="task" throwEvent="signal" signalName="tareaVista"/>
+    </extensionElements>
+    <startEvent id="aInicio"/>
+    <sequenceFlow id="a1" sourceRef="aInicio" targetRef="aTarea"/>
+    <userTask id="aTarea" name="Tarea de A" activiti:candidateGroups="1"/>
+    <sequenceFlow id="a2" sourceRef="aTarea" targetRef="aFin"/>
+    <endEvent id="aFin"/>
+  </process>
+
+  <process id="dosB" name="Dos procesos: B" isExecutable="true">
+    <!-- B no define listeners: si su señal llega, es el listener de A -->
+    <startEvent id="bInicio"/>
+    <sequenceFlow id="b1" sourceRef="bInicio" targetRef="bTarea"/>
+    <userTask id="bTarea" name="Tarea de B" activiti:candidateGroups="1"/>
+    <boundaryEvent id="bVista" attachedToRef="bTarea" cancelActivity="false"><signalEventDefinition signalRef="sVista"/></boundaryEvent>
+    <sequenceFlow id="b2" sourceRef="bVista" targetRef="bMarcar"/>
+    <serviceTask id="bMarcar" name="Marcar listener de A" activiti:expression="${true}" activiti:resultVariable="listenerDeA"/>
+    <sequenceFlow id="b3" sourceRef="bMarcar" targetRef="bFinMarca"/>
+    <endEvent id="bFinMarca"/>
+    <sequenceFlow id="b4" sourceRef="bTarea" targetRef="bFin"/>
+    <endEvent id="bFin"/>
+  </process>
+</definitions>
