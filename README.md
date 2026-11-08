@@ -138,7 +138,7 @@ PUT  /api/enterprise/app-definitions/{appId}      {"appDefinition":{"name":"Mi A
 
 > ⚠ **Otras dos cosas que cambia o exige la forma C (comprobado):**
 > - Al importar, los event listeners con **¿Reiniciar evento?** pierden el `entityType`. Los de clase y expresión delegada lo conservan.
-> - Para publicar la app, cada tarea de usuario necesita asignado, usuarios candidatos o grupos candidatos. Si falta, la publicación devuelve `User task has no assignment set` y no despliega nada.
+> - Para publicar la app, cada tarea de usuario necesita asignado, usuarios candidatos o grupos candidatos. Si falta, la publicación devuelve `User task has no assignment set` y no despliega nada. Por API llega con **HTTP 200** y `"error": true` (mensaje en `errorDescription`): hay que revisar el cuerpo, no sólo el status.
 
 ### Requisitos de cada ejemplo
 
@@ -155,7 +155,7 @@ PUT  /api/enterprise/app-definitions/{appId}      {"appDefinition":{"name":"Mi A
 | [`ConceptosMotor/ejemplos/dosProcesos.bpmn20.xml`](./ConceptosMotor/ejemplos/dosProcesos.bpmn20.xml) | `dosA`, `dosB` (2 procesos) | ninguno. Por el App Designer sólo entra `dosA` |
 | [`Listeners/ejemplos/eventListenersDemo.bpmn20.xml`](./Listeners/ejemplos/eventListenersDemo.bpmn20.xml) | `eventListenersDemo` | ninguno |
 | [`Listeners/ejemplos/eventListenersError.bpmn20.xml`](./Listeners/ejemplos/eventListenersError.bpmn20.xml) | `eventListenersError` | ninguno: al iniciarlo, el error cancela la tarea y termina |
-| [`EjemplosJava/procesos/javaDemo.bpmn20.xml`](./EjemplosJava/procesos/javaDemo.bpmn20.xml) | `javaDemo`, `pedidoJava`, `pagadorJava`, `alertadorJava` (4 procesos) | **antes** desplegar `training-aps-ejemplos.jar` y reiniciar ([cómo](./EjemplosJava/README.md#compilar-y-desplegar)); `monto` al iniciar `javaDemo`; `pedidoId` e `importe` en `pagadorJava` |
+| [`EjemplosJava/procesos/javaDemo.bpmn20.xml`](./EjemplosJava/procesos/javaDemo.bpmn20.xml) | `javaDemo`, `pedidoJava`, `pagadorJava`, `alertadorJava` (4 procesos) | **antes** desplegar `training-aps-ejemplos.jar` y reiniciar ([cómo](./EjemplosJava/README.md#compilar-y-desplegar)); `monto` al iniciar `javaDemo`; `pedidoId` e `importe` en `pagadorJava`; con `el.whitelisting.enabled=true`, añadir `DelegateExecution.*` a `call-whitelist.conf` para `alertadorJava` ([detalle](./EjemplosJava/README.md#compilar-y-desplegar)) |
 
 # Referencias
 
