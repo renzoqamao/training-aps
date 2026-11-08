@@ -46,13 +46,15 @@ Se presentan algunos de los puntos críticos que escuchamos con bastante frecuen
     <dependency>
         <groupId>com.fasterxml.jackson.core</groupId>
         <artifactId>jackson-core</artifactId>
-        <version>2.12.3</version>
+        <version>2.18.1</version> <!-- la que trae APS 24.4 -->
+        <scope>provided</scope>
     </dependency>
     <!-- Dependencia para jackson-databind -->
     <dependency>
         <groupId>com.fasterxml.jackson.core</groupId>
         <artifactId>jackson-databind</artifactId>
-        <version>2.12.3</version>
+        <version>2.18.1</version> <!-- la que trae APS 24.4 -->
+        <scope>provided</scope>
     </dependency>
     ```
     ```java
