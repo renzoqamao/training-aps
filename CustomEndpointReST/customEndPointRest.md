@@ -178,11 +178,11 @@ Añadir al pom.xml
         <dependency>
             <groupId>jakarta.servlet</groupId>
             <artifactId>jakarta.servlet-api</artifactId>
-            <version>5.0.0</version>
+            <version>6.0.0</version>
             <scope>provided</scope>
-        <dependency>
+        </dependency>
 
-         <!-- Dependencia para java-jwt -->
+         <!-- Dependencia para java-jwt (APS 24.4 no la trae: copiar también java-jwt-4.4.0.jar a WEB-INF/lib) -->
     <dependency>
         <groupId>com.auth0</groupId>
         <artifactId>java-jwt</artifactId>
@@ -427,9 +427,9 @@ Añadir al pom.xml
         <dependency>
             <groupId>jakarta.servlet</groupId>
             <artifactId>jakarta.servlet-api</artifactId>
-            <version>5.0.0</version>
+            <version>6.0.0</version>
             <scope>provided</scope>
-        <dependency>
+        </dependency>
     </dependencies>
   
     ```

@@ -389,6 +389,6 @@ Con `org.activiti.engine.*Service.*` u `org.activiti.engine.history.*Query.*` (l
 
 ```bash
 cd ServiceTask/ejemplos
-APS_WHITELIST=true  APS_USER=... APS_PASS=... python probar.py   # servidor con las listas activas (por defecto)
+APS_WHITELIST=true  APS_USER=... APS_PASS=... python probar.py   # listas activas (por defecto) + los patrones de call-whitelist.conf de arriba (sin ellos, serviceTaskPermitido da 500)
 APS_WHITELIST=false APS_USER=... APS_PASS=... python probar.py   # servidor con beans.whitelisting.enabled=false
 ```

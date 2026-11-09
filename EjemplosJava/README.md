@@ -80,7 +80,7 @@ MensajeriaBean: mensaje y señal desde Java
 Todo OK
 ```
 
-Se probó con las listas blancas desactivadas y también con `beans.whitelisting.enabled=true` + `el.whitelisting.enabled=true` (valores por defecto del producto): **todo pasa sin tocar `beans-whitelist.conf` ni `call-whitelist.conf`**, porque los beans de `com.activiti.extension.bean` se consideran permitidos.
+Se probó con las listas blancas desactivadas y también con `beans.whitelisting.enabled=true` + `el.whitelisting.enabled=true` (valores por defecto del producto). Los beans de `com.activiti.extension.bean` se consideran permitidos: **no hace falta tocar `beans-whitelist.conf`**. Pero con `el.whitelisting.enabled=true` y `call-whitelist.conf` vacío, **`alertadorJava` falla** al iniciar (HTTP 500, `Unknown property used in expression: ${mensajeriaBean.alertar(execution.tenantId)}`): leer `execution.tenantId` es una llamada a `DelegateExecution` (`iniciadorJava` usa lo mismo). Al añadir `org.activiti.engine.delegate.DelegateExecution.*` a `call-whitelist.conf` pasa todo (comprobado el 2026-11-07).
 
 ---
 

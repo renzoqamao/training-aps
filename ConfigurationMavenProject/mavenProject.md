@@ -108,8 +108,8 @@
     <properties>
 		<maven.compiler.source>17</maven.compiler.source>
 		<maven.compiler.target>17</maven.compiler.target>
-		<suite.version>24.2.0</suite.version>
-		<spring-boot.version>3.2.3</spring-boot.version>
+		<suite.version>24.4.0</suite.version>
+		<spring-boot.version>3.3.5</spring-boot.version>
 	</properties>
 ```
 
@@ -360,7 +360,7 @@ La técnica utilizada es el **WAR Overlay**: Maven descarga el artefacto base `c
     <properties>
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
-        <suite.version>24.2.0</suite.version>
+        <suite.version>24.4.0</suite.version>
     </properties>
 
     <repositories>
@@ -516,7 +516,7 @@ activiti-app-overlay-war/target/activiti-app.war
 
 6. Colocas las licencias necesitas en /license con el nombre ``activiti.lic``
 
-7. La versión de APS se toma automáticamente de pom.xml, solo necesita configurar la versión de APS habilitando el perfil activo de una versión específica ``mvn clean install -Paps24.2.0``. Los scripts de ejecución admiten los siguientes comandos: 
+7. La versión de APS se toma automáticamente de pom.xml, solo necesita configurar la versión de APS habilitando el perfil activo de una versión específica ``mvn clean install -Paps24.4.0``. Los scripts de ejecución admiten los siguientes comandos: 
 
 
 * Para solo la applicación Activiti App: `./run.sh (.bat) {build_start|build_start_it_supported|start|stop|purge|tail|reload_aps|build_test|test}`
